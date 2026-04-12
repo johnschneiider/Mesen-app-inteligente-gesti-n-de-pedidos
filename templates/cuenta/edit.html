@@ -1,0 +1,220 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block title %}Editar perfil — Mesenú{% endblock %}
+
+{% block store_content %}
+<div style="max-width:480px;margin:0 auto;padding:24px 16px 64px;">
+
+    <div style="margin-bottom:20px;">
+        <a href="{% url 'accounts:consumer_dashboard' %}" style="font-size:12px;color:var(--text-3);text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:8px;">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Volver a mi cuenta
+        </a>
+        <h1 style="font-size:22px;font-weight:700;letter-spacing:-0.4px;margin:0;">Editar perfil</h1>
+    </div>
+
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert-success" style="margin-bottom:14px;">{{ msg }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- ── PROFILE FORM ── -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Avatar picker -->
+        <div class="card" style="margin-bottom:16px;">
+            <div x-data="avatarPicker()" style="display:flex;align-items:center;gap:16px;">
+                <!-- Preview circle -->
+                <div style="position:relative;flex-shrink:0;">
+                    <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;background:var(--green-light);border:2.5px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--green-dark);">
+                        <template x-if="preview">
+                            <img :src="preview" style="width:100%;height:100%;object-fit:cover;">
+                        </template>
+                        <template x-if="!preview">
+                            {% if u.avatar %}
+                            <img src="{{ u.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">
+                            {% else %}
+                            <span>{{ u.phone|slice:":2" }}</span>
+                            {% endif %}
+                        </template>
+                    </div>
+                    <!-- Camera overlay button -->
+                    <button type="button" @click="$refs.fileInput.click()"
+                            style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-radius:50%;background:var(--green);border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                            <path d="M4 1.5H7L8 3h1.5A.5.5 0 0110 3.5v5a.5.5 0 01-.5.5h-8A.5.5 0 011 8.5v-5A.5.5 0 011.5 3H3L4 1.5z" stroke="white" stroke-width="1" stroke-linejoin="round" fill="none"/>
+                            <circle cx="5.5" cy="6" r="1.5" stroke="white" stroke-width="1" fill="none"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div style="flex:1;">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:4px;">Foto de perfil</div>
+                    <!-- Hidden real file input -->
+                    <input type="file" name="avatar" accept="image/*" x-ref="fileInput"
+                           style="display:none;" @change="onFile($event)">
+                    <!-- Styled trigger button -->
+                    <button type="button" @click="$refs.fileInput.click()"
+                            style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--green-dark);background:var(--green-light);border:1px solid var(--green-border);border-radius:8px;padding:6px 12px;cursor:pointer;transition:background .15s;">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                            <path d="M5 2H8L9.5 4H11.5A.5.5 0 0112 4.5v6a.5.5 0 01-.5.5h-10A.5.5 0 011 10.5v-6A.5.5 0 011.5 4H3.5L5 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="none"/>
+                            <circle cx="6.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                        </svg>
+                        <span x-text="fileName || '{% if u.avatar %}Cambiar foto{% else %}Seleccionar foto{% endif %}'"></span>
+                    </button>
+                    <div x-show="fileName" style="font-size:11px;color:var(--green-dark);margin-top:4px;display:none;" x-transition>
+                        ✓ <span x-text="fileName"></span>
+                    </div>
+                    {% if u.avatar %}
+                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);cursor:pointer;margin-top:8px;">
+                        <input type="checkbox" name="remove_avatar" value="1"> Eliminar foto actual
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Name & phone -->
+        <div class="card" style="margin-bottom:16px;">
+            <div class="form-group">
+                <label class="form-label">Nombre completo</label>
+                <input type="text" name="full_name" value="{{ u.full_name }}" placeholder="Tu nombre" required
+                       style="width:100%;box-sizing:border-box;">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Teléfono</label>
+                <div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:var(--radius-md);padding:9px 12px;background:var(--page-bg);font-size:14px;color:var(--text-2);">
+                    {{ u.phone }}
+                    <span style="font-size:11px;color:var(--text-3);margin-left:auto;">No editable (es tu usuario)</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:28px;">
+            <a href="{% url 'accounts:consumer_dashboard' %}" class="btn-ghost">Cancelar</a>
+            <button type="submit" class="btn-primary">Guardar cambios</button>
+        </div>
+    </form>
+
+    <!-- ── DIRECCIONES ── -->
+    <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div>
+                <div style="font-size:15px;font-weight:700;color:var(--text-1);">Mis direcciones</div>
+                <div style="font-size:12px;color:var(--text-3);margin-top:1px;">Para pedidos a domicilio</div>
+            </div>
+        </div>
+
+        {% if addresses %}
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+            {% for addr in addresses %}
+            <div style="display:flex;align-items:flex-start;gap:10px;background:{% if addr.is_default %}var(--green-light){% else %}var(--page-bg){% endif %};border:1px solid {% if addr.is_default %}var(--green-border){% else %}var(--border){% endif %};border-radius:11px;padding:12px 14px;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;margin-top:1px;">
+                    <path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6c0 3.375 4.5 8 4.5 8s4.5-4.625 4.5-8c0-2.485-2.015-4.5-4.5-4.5zm0 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="{% if addr.is_default %}var(--green){% else %}var(--text-3){% endif %}"/>
+                </svg>
+                <div style="flex:1;min-width:0;">
+                    {% if addr.label %}
+                    <div style="font-size:11px;font-weight:700;color:{% if addr.is_default %}var(--green-dark){% else %}var(--text-3){% endif %};text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;">{{ addr.label }}</div>
+                    {% endif %}
+                    <div style="font-size:13px;color:var(--text-1);font-weight:500;">{{ addr.address }}</div>
+                    {% if addr.is_default %}
+                    <span style="font-size:10px;background:var(--green);color:#fff;border-radius:99px;padding:1px 8px;font-weight:700;margin-top:4px;display:inline-block;">Predeterminada</span>
+                    {% endif %}
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+                    {% if not addr.is_default %}
+                    <form method="post" action="{% url 'accounts:set_default_address' addr.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" title="Poner como predeterminada"
+                                style="font-size:10px;color:var(--green-dark);background:none;border:1px solid var(--green-border);border-radius:6px;padding:3px 8px;cursor:pointer;white-space:nowrap;">
+                            Predeterminar
+                        </button>
+                    </form>
+                    {% endif %}
+                    <form method="post" action="{% url 'accounts:delete_address' addr.pk %}"
+                          onsubmit="return confirm('¿Eliminar esta dirección?')">
+                        {% csrf_token %}
+                        <button type="submit" title="Eliminar"
+                                style="font-size:10px;color:#DC2626;background:none;border:1px solid #fecaca;border-radius:6px;padding:3px 8px;cursor:pointer;">
+                            Eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Add address form -->
+        <div x-data="{ open: false }" style="border-top:{% if addresses %}0.5px solid var(--border){% else %}none{% endif %};padding-top:{% if addresses %}12px{% else %}0{% endif %};">
+            <button type="button" @click="open = !open"
+                    style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--green-dark);background:none;border:none;cursor:pointer;padding:0;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6.5" stroke="var(--green)" stroke-width="1.3"/>
+                    <path d="M8 5v6M5 8h6" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                Agregar dirección
+            </button>
+
+            <div x-show="open" x-transition style="margin-top:12px;display:none;">
+                <form method="post" action="{% url 'accounts:add_address' %}">
+                    {% csrf_token %}
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px;">Etiqueta (opcional)</label>
+                            <input type="text" name="label" placeholder="Ej: Casa, Trabajo"
+                                   maxlength="80"
+                                   style="width:100%;box-sizing:border-box;border:1.5px solid var(--border-med);border-radius:9px;padding:9px 12px;font-size:13px;font-family:inherit;transition:border-color .15s;"
+                                   onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border-med)'">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px;">Dirección *</label>
+                            <input type="text" name="address" placeholder="Calle, barrio, ciudad…"
+                                   required maxlength="200"
+                                   style="width:100%;box-sizing:border-box;border:1.5px solid var(--border-med);border-radius:9px;padding:9px 12px;font-size:13px;font-family:inherit;transition:border-color .15s;"
+                                   onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border-med)'">
+                        </div>
+                        {% if not addresses %}
+                        <input type="hidden" name="is_default" value="1">
+                        {% else %}
+                        <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-2);cursor:pointer;">
+                            <input type="checkbox" name="is_default" value="1"> Usar como predeterminada
+                        </label>
+                        {% endif %}
+                        <div style="display:flex;gap:8px;justify-content:flex-end;">
+                            <button type="button" @click="open = false"
+                                    style="background:none;border:1px solid var(--border);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;color:var(--text-2);">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn-primary" style="padding:7px 18px;font-size:13px;">
+                                Guardar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function avatarPicker() {
+    return {
+        preview: null,
+        fileName: '',
+        onFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            this.fileName = file.name.length > 24 ? file.name.slice(0, 22) + '…' : file.name;
+            const reader = new FileReader();
+            reader.onload = (ev) => { this.preview = ev.target.result; };
+            reader.readAsDataURL(file);
+        }
+    }
+}
+</script>
+{% endblock %}

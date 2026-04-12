@@ -1,0 +1,68 @@
+{% extends 'base_negocio.html' %}
+{% load mesenu_tags %}
+
+{% block title %}Suscripciones — {{ request.user.business.name }}{% endblock %}
+
+{% block main_content %}
+<div class="page-header">
+    <div>
+        <h1>Suscripciones de clientes</h1>
+        <div class="subtitle">Planes que ofreces a tus clientes</div>
+    </div>
+    <a href="{% url 'subscriptions:create' %}" class="btn-primary">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Nuevo plan
+    </a>
+</div>
+
+{% if plans %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px;">
+    {% for plan in plans %}
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div style="font-size:15px;font-weight:600;">{{ plan.name }}</div>
+            <span class="badge {% if plan.is_active %}badge-listo{% else %}badge-pendiente{% endif %}">
+                {% if plan.is_active %}Activo{% else %}Inactivo{% endif %}
+            </span>
+        </div>
+        <div style="font-size:20px;font-weight:700;color:var(--green);">{{ plan.price|currency_cop }}</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:8px;">/ {{ plan.get_frequency_display }}</div>
+        {% if plan.description %}<div style="font-size:12px;color:var(--text-2);margin-bottom:10px;">{{ plan.description }}</div>{% endif %}
+        {% if plan.benefits.exists %}
+        <ul style="list-style:none;padding:0;margin:0 0 12px;display:flex;flex-direction:column;gap:4px;">
+            {% for b in plan.benefits.all %}
+            <li style="font-size:12px;color:var(--text-2);">· {{ b.description }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <div style="font-size:11px;color:var(--text-3);border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
+            {{ plan.client_subscriptions.filter.active.count|default:"0" }} suscriptor{{ plan.client_subscriptions.filter.active.count|default:"0"|pluralize:"es" }} activo{{ plan.client_subscriptions.filter.active.count|default:"0"|pluralize:"s" }}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+            <a href="{% url 'subscriptions:plan_edit' plan.pk %}" class="btn-ghost" style="flex:1;text-align:center;font-size:12px;padding:6px;">Editar</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Client subscriptions table -->
+<div class="card">
+    <div class="section-header"><h2>Suscriptores activos</h2></div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Plan</th>
+                <th>Frecuencia</th>
+                <th>Inicio</th>
+                <th>Vence</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody id="subs-body">
+            {% include 'subscriptions/partials/sub_row.html' with subscriptions=client_subscriptions %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

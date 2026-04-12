@@ -1,0 +1,17 @@
+{% load mesenu_tags %}
+{% for sub in subscriptions %}
+<tr>
+    <td style="font-size:13px;">{{ sub.client.full_name|default:sub.client.phone }}</td>
+    <td style="font-size:13px;">{{ sub.plan.name }}</td>
+    <td style="font-size:12px;color:var(--text-3);">{{ sub.plan.get_frequency_display }}</td>
+    <td style="font-size:12px;color:var(--text-3);">{{ sub.starts_at|date:"j N Y"|default:"—" }}</td>
+    <td style="font-size:12px;color:var(--text-3);">{{ sub.expires_at|date:"j N Y"|default:"—" }}</td>
+    <td>
+        <span class="badge {% if sub.status == 'active' %}badge-listo{% elif sub.status == 'pending' %}badge-pendiente{% else %}badge-cancelado{% endif %}">
+            {{ sub.get_status_display }}
+        </span>
+    </td>
+</tr>
+{% empty %}
+<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-3);">Sin suscriptores aún</td></tr>
+{% endfor %}

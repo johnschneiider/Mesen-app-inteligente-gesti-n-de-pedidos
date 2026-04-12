@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="panel-layout" x-data="{ sidebarOpen: false }">
+    {% include 'components/navbar.html' %}
+    <div class="panel-body">
+        <!-- Overlay: closes sidebar when tapping outside on mobile -->
+        <div class="sidebar-overlay"
+             x-show="sidebarOpen"
+             @click="sidebarOpen = false"
+             x-cloak
+             style="display:none;">
+        </div>
+        {% include 'components/sidebar.html' %}
+        <main class="panel-main">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert-{{ message.tags }}" style="margin-bottom:16px;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% block main_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

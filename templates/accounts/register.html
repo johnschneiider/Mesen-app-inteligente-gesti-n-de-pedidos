@@ -1,0 +1,203 @@
+{% extends 'base_public.html' %}
+{% block title %}Crear cuenta — Mesenú{% endblock %}
+{% block store_content %}
+<style>
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--page-bg); padding: 24px 16px; }
+.auth-card { background: var(--white); border: 0.5px solid var(--border); border-radius: var(--radius-xl); padding: 36px 32px; width: 100%; max-width: 400px; }
+
+/* progress bar on top of card */
+.reg-progress { display: flex; gap: 4px; margin-bottom: 24px; }
+.reg-progress-dot { flex: 1; height: 3px; border-radius: 99px; background: var(--border); transition: background 0.25s; }
+.reg-progress-dot.done { background: var(--green); }
+.reg-progress-dot.active { background: var(--green-mid); }
+
+input.valid   { border-color: var(--green) !important; }
+input.invalid { border-color: var(--red) !important; }
+
+@media (max-width: 480px) {
+    .auth-card { padding: 28px 20px; }
+}
+</style>
+{% load static %}
+<div class="auth-wrap">
+    <div class="auth-card" x-data="{
+        name: '',
+        phone: '',
+        pw: '',
+        pw2: '',
+        touched: { name: false, phone: false, pw: false, pw2: false },
+        phoneChecking: false,
+        phoneExists: null,
+        _phoneCheckTimer: null,
+        nameDirty() { return this.touched.name || this.name.length > 0 },
+        phoneDirty() { return this.touched.phone || this.phone.length > 0 },
+        pwDirty() { return this.touched.pw || this.pw.length > 0 },
+        pw2Dirty() { return this.touched.pw2 || this.pw2.length > 0 },
+        get nameOk() { return this.name.trim().length >= 2 },
+        get phoneFormatOk() { return /^\d{10}$/.test(this.phone) },
+        checkPhoneExists() {
+            clearTimeout(this._phoneCheckTimer);
+            this.phoneExists = null;
+            if (!this.phoneFormatOk) return;
+            this.phoneChecking = true;
+            this._phoneCheckTimer = setTimeout(() => {
+                fetch('{% url "accounts:validate_phone" %}?phone=' + encodeURIComponent(this.phone))
+                    .then(r => r.text())
+                    .then(html => {
+                        this.phoneExists = html.includes('ya está registrado');
+                        this.phoneChecking = false;
+                    })
+                    .catch(() => { this.phoneChecking = false; });
+            }, 400);
+        },
+        get phoneOk() { return this.phoneFormatOk && !this.phoneExists && !this.phoneChecking },
+        get pwOk() { return this.pw.length >= 6 },
+        get pwStrength() {
+            if (this.pw.length === 0) return 0;
+            let s = 0;
+            if (this.pw.length >= 6) s++;
+            if (this.pw.length >= 8) s++;
+            if (/[A-Z]/.test(this.pw)) s++;
+            if (/\d/.test(this.pw)) s++;
+            if (/[^A-Za-z0-9]/.test(this.pw)) s++;
+            return s;
+        },
+        get pwStrengthLabel() {
+            const s = this.pwStrength;
+            if (s <= 1) return 'Débil';
+            if (s <= 2) return 'Regular';
+            if (s <= 3) return 'Buena';
+            return 'Fuerte';
+        },
+        get pwStrengthColor() {
+            const s = this.pwStrength;
+            if (s <= 1) return 'var(--red)';
+            if (s <= 2) return 'var(--amber)';
+            return 'var(--green)';
+        },
+        get pw2Ok() { return this.pw2.length > 0 && this.pw2 === this.pw },
+        get progressDots() {
+            return [this.nameOk, this.phoneOk, this.pwOk, this.pw2Ok].filter(Boolean).length;
+        }
+    }">
+        <a href="/" style="display:flex;align-items:center;gap:8px;margin-bottom:24px;text-decoration:none;">
+            <img src="{% static 'img/logo.svg' %}" width="32" height="32" alt="Logo">
+            <span style="font-size:18px;font-weight:600;color:var(--green-dark);">Mesenú</span>
+        </a>
+
+        <!-- Progress dots -->
+        <div class="reg-progress">
+            <div class="reg-progress-dot" :class="progressDots >= 1 ? 'done' : (name.length > 0 ? 'active' : '')"></div>
+            <div class="reg-progress-dot" :class="progressDots >= 2 ? 'done' : (phone.length > 0 ? 'active' : '')"></div>
+            <div class="reg-progress-dot" :class="progressDots >= 3 ? 'done' : (pw.length > 0 ? 'active' : '')"></div>
+            <div class="reg-progress-dot" :class="progressDots >= 4 ? 'done' : (pw2.length > 0 ? 'active' : '')"></div>
+        </div>
+
+        <h1 style="margin-bottom:4px;">Crea tu cuenta personal</h1>
+        <p style="color:var(--text-3);font-size:13px;margin-bottom:24px;">Es tu perfil de usuario. Luego podrás crear o unirte a un negocio.</p>
+
+        {% if form.non_field_errors %}
+        <div class="alert-error" style="margin-bottom:16px;">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+
+        <form method="post" hx-boost="false">
+            {% csrf_token %}
+
+            <!-- Nombre -->
+            <div class="form-group">
+                <label>Tu nombre (personal, no el del negocio)</label>
+                <input type="text" name="full_name"
+                       placeholder="Ej: María García"
+                       value="{{ form.full_name.value|default:'' }}"
+                       x-model="name"
+                       @blur="touched.name = true"
+                       :class="nameDirty() ? (nameOk ? 'valid' : 'invalid') : ''"
+                       required>
+                <div class="field-hint" x-show="nameDirty() && !nameOk" style="display:none;">
+                    <span class="error">✗ Ingresa tu nombre completo (mínimo 2 caracteres)</span>
+                </div>
+                <div class="field-hint" x-show="nameOk" style="display:none;">
+                    <span class="ok">✓ Perfecto</span>
+                </div>
+                <p style="font-size:11px;color:var(--text-3);margin-top:5px;margin-bottom:0;">El nombre del negocio lo configuras en el siguiente paso.</p>
+                {% if form.full_name.errors %}<div class="field-error">{{ form.full_name.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Teléfono -->
+            <div class="form-group">
+                <label>Teléfono (10 dígitos)</label>
+                <input type="tel" name="phone"
+                       placeholder="Ej: 3001234567"
+                       value="{{ form.phone.value|default:'' }}"
+                       x-model="phone"
+                       @input="checkPhoneExists()"
+                       @blur="touched.phone = true; checkPhoneExists()"
+                       :class="phoneDirty() ? (phoneFormatOk ? (phoneExists ? 'invalid' : (phoneChecking ? '' : 'valid')) : 'invalid') : ''"
+                       maxlength="10"
+                       inputmode="numeric"
+                       required>
+                <div class="field-hint">
+                    <span x-show="phoneDirty() && !phoneFormatOk" style="color:var(--red)">✗ Debe tener exactamente 10 dígitos</span>
+                    <span x-show="phoneFormatOk && phoneChecking" style="color:var(--text-3)">Verificando…</span>
+                    <span x-show="phoneFormatOk && !phoneChecking && phoneExists === true" style="color:var(--red)">✗ Este número ya está registrado</span>
+                    <span x-show="phoneFormatOk && !phoneChecking && phoneExists === false" style="color:var(--green)">✓ Número disponible</span>
+                </div>
+                {% if form.phone.errors %}<div class="field-error">{{ form.phone.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Contraseña -->
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" name="password"
+                       placeholder="Mínimo 6 caracteres"
+                       x-model="pw"
+                       @blur="touched.pw = true"
+                       :class="pwDirty() ? (pwOk ? 'valid' : 'invalid') : ''"
+                       required>
+                <!-- Strength bar -->
+                <div x-show="pw.length > 0" style="display:none;margin-top:6px;">
+                    <div style="display:flex;gap:3px;margin-bottom:3px;">
+                        <template x-for="i in 5">
+                            <div style="flex:1;height:3px;border-radius:99px;transition:background 0.2s;"
+                                 :style="i <= pwStrength ? `background:${pwStrengthColor}` : 'background:var(--border)'"></div>
+                        </template>
+                    </div>
+                    <span class="field-hint" :style="`color:${pwStrengthColor}`" x-text="pwStrengthLabel" style="display:inline;"></span>
+                </div>
+                <div class="field-hint" x-show="pwDirty() && !pwOk" style="display:none;">
+                    <span class="error">✗ Mínimo 6 caracteres</span>
+                </div>
+                {% if form.password.errors %}<div class="field-error">{{ form.password.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Confirmar contraseña -->
+            <div class="form-group">
+                <label>Confirmar contraseña</label>
+                <input type="password" name="password_confirm"
+                       placeholder="Repite tu contraseña"
+                       x-model="pw2"
+                       @blur="touched.pw2 = true"
+                       :class="pw2Dirty() ? (pw2Ok ? 'valid' : 'invalid') : ''"
+                       required>
+                <div class="field-hint" x-show="pw2Dirty() && pw2.length > 0 && !pw2Ok" style="display:none;">
+                    <span class="error">✗ Las contraseñas no coinciden</span>
+                </div>
+                <div class="field-hint" x-show="pw2Ok" style="display:none;">
+                    <span class="ok">✓ Las contraseñas coinciden</span>
+                </div>
+                {% if form.password_confirm.errors %}<div class="field-error">{{ form.password_confirm.errors.0 }}</div>{% endif %}
+            </div>
+
+            <button type="submit" class="btn-primary"
+                    :disabled="phoneExists === true || phoneChecking"
+                    style="width:100%;justify-content:center;padding:10px;margin-top:4px;">
+                Crear cuenta gratis
+            </button>
+        </form>
+
+        <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-3);">
+            ¿Ya tienes cuenta? <a href="{% url 'accounts:login' %}" style="color:var(--green);text-decoration:none;font-weight:500;">Iniciar sesión</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

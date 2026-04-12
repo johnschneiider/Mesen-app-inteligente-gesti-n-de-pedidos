@@ -1,0 +1,46 @@
+{% extends 'base_public.html' %}
+{% block title %}Iniciar sesión — Mesenú{% endblock %}
+{% block store_content %}
+<style>
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--page-bg); }
+.auth-card { background: var(--white); border: 0.5px solid var(--border); border-radius: var(--radius-xl); padding: 36px 32px; width: 100%; max-width: 380px; box-shadow: var(--shadow-card); }
+.auth-logo { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; text-decoration: none; }
+.auth-logo span { font-size: 18px; font-weight: 600; color: var(--green-dark); }
+</style>
+{% load static %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <a href="/" class="auth-logo">
+            <img src="{% static 'img/logo.svg' %}" width="32" height="32" alt="Logo">
+            <span>Mesenú</span>
+        </a>
+        <h1 style="margin-bottom:6px;">Bienvenido de vuelta</h1>
+        <p style="color:var(--text-3);font-size:13px;margin-bottom:24px;">Ingresa con tu número de teléfono</p>
+
+        {% if form.non_field_errors %}
+        <div class="alert-error" style="margin-bottom:16px;">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_phone">Teléfono</label>
+                <input type="tel" name="phone" id="id_phone" placeholder="Ej: 3001234567" value="{{ form.phone.value|default:'' }}" required autofocus>
+                {% if form.phone.errors %}<div class="field-error">{{ form.phone.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="id_password">Contraseña</label>
+                <input type="password" name="password" id="id_password" placeholder="Tu contraseña" required>
+                {% if form.password.errors %}<div class="field-error">{{ form.password.errors.0 }}</div>{% endif %}
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;padding:10px;margin-top:4px;">
+                Iniciar sesión
+            </button>
+        </form>
+
+        <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-3);">
+            ¿No tienes cuenta? <a href="{% url 'accounts:register' %}" style="color:var(--green);text-decoration:none;font-weight:500;">Regístrate gratis</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

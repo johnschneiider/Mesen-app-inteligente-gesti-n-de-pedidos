@@ -1,0 +1,77 @@
+/* ─── Mesenú Design System — main.css ─── */
+
+:root {
+    /* Marca */
+    --green:         #1D9E75;
+    --green-light:   #E1F5EE;
+    --green-mid:     #5DCAA5;
+    --green-dark:    #085041;
+    --green-border:  #9FE1CB;
+
+    /* Semántico */
+    --amber:         #BA7517;
+    --amber-bg:      #FAEEDA;
+    --amber-border:  #FAC775;
+    --red:           #A32D2D;
+    --red-bg:        #FCEBEB;
+    --blue:          #185FA5;
+    --blue-bg:       #E6F1FB;
+
+    /* Superficies */
+    --page-bg:       #F2F4F1;
+    --white:         #ffffff;
+    --card-bg:       #ffffff;
+
+    /* Texto */
+    --text-1:        #18181A;
+    --text-2:        #52524E;
+    --text-3:        #A3A39E;
+
+    /* Bordes */
+    --border:        rgba(0,0,0,0.07);
+    --border-med:    rgba(0,0,0,0.12);
+
+    /* Layout */
+    --sidebar-w:     220px;
+    --nav-h:         56px;
+    --radius-sm:     6px;
+    --radius-md:     9px;
+    --radius-lg:     12px;
+    --radius-xl:     16px;
+
+    /* Sombras */
+    --shadow-card:   0 1px 3px rgba(0,0,0,0.06);
+
+    /* Transiciones */
+    --transition:    0.15s ease;
+}
+
+/* ─── Reset ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 14px; }
+
+body {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    color: var(--text-1);
+    background: var(--page-bg);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+}
+
+a { color: inherit; }
+
+img { display: block; max-width: 100%; }
+
+h1 { font-size: 20px; font-weight: 500; letter-spacing: -0.4px; }
+h2 { font-size: 16px; font-weight: 500; letter-spacing: -0.2px; }
+h3 { font-size: 14px; font-weight: 500; }
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-med); border-radius: 99px; }
+
+/* Alpine.js cloak */
+[x-cloak] { display: none !important; }

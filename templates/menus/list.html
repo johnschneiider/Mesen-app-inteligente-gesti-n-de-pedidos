@@ -1,0 +1,218 @@
+{% extends 'base_negocio.html' %}
+{% load static %}
+{% load mesenu_tags %}
+
+{% block title %}Menús — {{ request.user.business.name }}{% endblock %}
+
+{% block main_content %}
+<div x-data="menuDeleteManager()" @keydown.escape.window="confirmOpen = false">
+
+<div class="page-header">
+    <div>
+        <h1>Menús del día</h1>
+        <div class="subtitle">Gestiona tu oferta diaria</div>
+    </div>
+    <a href="{% url 'menus:create' %}" class="btn-primary">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Nuevo menú
+    </a>
+</div>
+
+{% if messages %}
+{% for msg in messages %}
+<div class="alert-{{ msg.tags }}" style="margin-bottom:12px;">{{ msg }}</div>
+{% endfor %}
+{% endif %}
+
+{% if menus %}
+<div id="menus-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+    {% for menu in menus %}
+    <div class="card" data-menu-id="{{ menu.pk }}" style="padding:0;overflow:hidden;">
+        {% if menu.featured_photo %}
+        <img src="{{ menu.featured_photo.image.url }}" alt="{{ menu.title }}" 
+             style="width:100%;height:140px;object-fit:cover;">
+        {% else %}
+        <div style="width:100%;height:140px;background:var(--bg-alt);display:flex;align-items:center;justify-content:center;">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="4" fill="#F5F3EF"/><path d="M8 22l6-8 4 5 3-3 5 6H8z" fill="#D0CEC7"/></svg>
+        </div>
+        {% endif %}
+        <div style="padding:16px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
+                <div>
+                    <div style="font-size:14px;font-weight:600;color:var(--text-1);">{{ menu.title }}</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:2px;">
+                        {{ menu.valid_from|date:"j N" }} {% if menu.valid_until %}&nbsp;→&nbsp;{{ menu.valid_until|date:"j N" }}{% endif %}
+                    </div>
+                </div>
+                <div style="display:flex;gap:4px;flex-shrink:0;">
+                    {% if menu.is_sold_out %}
+                    <span class="badge badge-cancelado">Agotado</span>
+                    {% elif not menu.is_active %}
+                    <span class="badge badge-pendiente">Inactivo</span>
+                    {% elif menu.valid_from > now %}
+                    <span class="badge badge-pendiente" title="Visible a partir de {{ menu.valid_from|date:'j N H:i' }}">Programado</span>
+                    {% elif menu.valid_until and menu.valid_until < now %}
+                    <span class="badge badge-cancelado">Expirado</span>
+                    {% else %}
+                    <span class="badge badge-listo">Visible</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:10px;">
+                {{ menu.price|currency_cop }}
+                {% if menu.units_available %}<span style="font-size:11px;font-weight:400;color:var(--text-3);">&nbsp;·&nbsp;{{ menu.units_remaining }}/{{ menu.units_available }} unidades</span>{% endif %}
+            </div>
+
+            {% if menu.is_active and menu.valid_from > now %}
+            <div style="font-size:11px;color:#B45309;background:#FFFBEB;border:0.5px solid #FDE68A;border-radius:6px;padding:6px 10px;margin-bottom:10px;">
+                ⏰ Visible para clientes desde {{ menu.valid_from|date:"j N" }} a las {{ menu.valid_from|date:"H:i" }}
+            </div>
+            {% elif menu.valid_until and menu.valid_until < now %}
+            <div style="font-size:11px;color:#991B1B;background:#FEF2F2;border:0.5px solid #FECACA;border-radius:6px;padding:6px 10px;margin-bottom:10px;">
+                ❌ Este menú ya expiró. Edítalo para actualizarlo.
+            </div>
+            {% endif %}
+
+            {% if menu.avg_rating > 0 %}
+            <div style="display:flex;align-items:center;gap:4px;margin-bottom:10px;">
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="#E09900"><path d="M5.5 1l1.1 3.3H10L7.3 6.5l1 3.3L5.5 8 2.7 9.8l1-3.3L1 4.3h3.4z"/></svg>
+                <span style="font-size:11px;color:var(--text-2);">{{ menu.avg_rating|floatformat:1 }} ({{ menu.rating_count }} reseña{{ menu.rating_count|pluralize:"s" }})</span>
+            </div>
+            {% endif %}
+
+            <div style="display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+                <a href="{% url 'menus:update' menu.pk %}" class="btn-ghost" style="flex:1;text-align:center;font-size:12px;padding:6px 10px;">
+                    Editar
+                </a>
+                <button
+                    @click="openConfirm('{% url 'menus:delete' menu.pk %}', '{{ menu.title|escapejs }}', $el)"
+                    class="btn-danger" style="padding:6px 10px;font-size:12px;">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div style="display:flex;justify-content:center;gap:6px;margin-top:24px;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="btn-ghost" style="padding:6px 12px;font-size:12px;">← Anterior</a>
+    {% endif %}
+    <span style="padding:6px 12px;font-size:12px;color:var(--text-3);align-self:center;">
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+    </span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="btn-ghost" style="padding:6px 12px;font-size:12px;">Siguiente →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="card" style="text-align:center;padding:56px 24px;">
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="margin:0 auto 16px;display:block;"><rect width="40" height="40" rx="8" fill="#F5F3EF"/><path d="M12 26l6-9 5 6 3-3.5 6 6.5H12z" fill="#D0CEC7"/></svg>
+    <div style="font-size:15px;font-weight:600;color:var(--text-1);margin-bottom:6px;">Aún no tienes menús</div>
+    <div style="font-size:13px;color:var(--text-3);margin-bottom:20px;">Crea tu primer menú del día y empieza a recibir pedidos</div>
+    <a href="{% url 'menus:create' %}" class="btn-primary">Crear primer menú</a>
+</div>
+{% endif %}
+
+<!-- ── Confirm delete modal ── -->
+<div x-show="confirmOpen"
+     x-transition:enter="transition ease-out duration-150"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-100"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     @click.self="confirmOpen = false"
+     x-cloak
+     style="position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);
+            display:grid;place-items:center;padding:16px;box-sizing:border-box;">
+    <div x-show="confirmOpen"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         style="background:var(--white);border-radius:var(--radius-lg,12px);border:0.5px solid var(--border);
+                box-shadow:0 8px 32px rgba(0,0,0,0.15);padding:28px 24px;
+                width:100%;max-width:380px;box-sizing:border-box;">
+        <!-- Icon -->
+        <div style="width:44px;height:44px;border-radius:10px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8.5 4h3M3 6h14M5.5 6l.9 9.5a1 1 0 001 .9h5.2a1 1 0 001-.9L14.5 6" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-1);margin-bottom:6px;">¿Eliminar menú?</div>
+        <div style="font-size:13px;color:var(--text-3);margin-bottom:24px;">
+            Se eliminará <strong x-text="menuTitle" style="color:var(--text-2);"></strong> de forma permanente. Esta acción no se puede deshacer.
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button @click="confirmOpen = false"
+                    class="btn-ghost"
+                    style="font-size:13px;padding:8px 16px;">
+                Cancelar
+            </button>
+            <button @click="executeDelete()"
+                    :disabled="deleting"
+                    class="btn-danger"
+                    style="font-size:13px;padding:8px 16px;">
+                <span x-show="!deleting">Eliminar</span>
+                <span x-show="deleting">Eliminando…</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+</div><!-- end x-data -->
+
+{% block extra_js %}
+<script>
+function menuDeleteManager() {
+    return {
+        confirmOpen: false,
+        deleting: false,
+        menuTitle: '',
+        pendingUrl: '',
+        pendingCard: null,
+
+        openConfirm(url, title, btn) {
+            this.pendingUrl = url;
+            this.menuTitle = title;
+            this.pendingCard = btn.closest('.card');
+            this.confirmOpen = true;
+        },
+
+        async executeDelete() {
+            this.deleting = true;
+            try {
+                const res = await fetch(this.pendingUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content,
+                        'HX-Request': 'true',
+                    },
+                });
+                this.confirmOpen = false;
+                if (res.ok) {
+                    this.pendingCard.remove();
+                    showToast('Menú eliminado correctamente');
+                } else {
+                    const msg = await res.text();
+                    showToast(msg || 'No se pudo eliminar el menú.', 'error');
+                }
+            } catch (e) {
+                this.confirmOpen = false;
+                showToast('Error de conexión. Inténtalo de nuevo.', 'error');
+            } finally {
+                this.deleting = false;
+            }
+        },
+    };
+}
+</script>
+{% endblock %}
+{% endblock %}

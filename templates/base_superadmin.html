@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/superadmin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="superadmin-layout">
+    <nav class="superadmin-nav">
+        <a href="{% url 'superadmin:dashboard' %}" class="brand">
+            <img src="{% static 'img/logo.svg' %}" width="24" height="24" alt="Logo" style="filter:brightness(0) invert(1);">
+            Mesenú Admin
+        </a>
+        <span class="badge-superadmin">Superadmin</span>
+        <div style="flex:1;"></div>
+        <span style="font-size:12px;opacity:0.7;">{{ request.user.full_name }}</span>
+        <a href="{% url 'accounts:logout' %}" style="font-size:12px;color:rgba(255,255,255,0.7);text-decoration:none;">Salir</a>
+    </nav>
+    <div class="superadmin-body">
+        <aside class="superadmin-sidebar">
+            <a href="{% url 'superadmin:dashboard' %}" class="nav-item {% block active_dashboard %}{% endblock %}">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/><rect x="8" y="1" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/><rect x="1" y="8" width="5" height="5" rx="1.5" fill="currentColor"/><rect x="8" y="8" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/></svg>
+                Inicio
+            </a>
+            <a href="{% url 'superadmin:business_list' %}" class="nav-item {% block active_businesses %}{% endblock %}">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10V6l5-4 5 4v4a1 1 0 01-1 1H3a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M5 11V8h4v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Negocios
+            </a>
+            <a href="{% url 'superadmin:ticket_list' %}" class="nav-item {% block active_tickets %}{% endblock %}">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10a1 1 0 011 1v6a1 1 0 01-1 1H2a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M4 6h6M4 8.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Tickets
+            </a>
+        </aside>
+        <main class="superadmin-main">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert-{{ message.tags }}" style="margin-bottom:16px;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% block admin_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

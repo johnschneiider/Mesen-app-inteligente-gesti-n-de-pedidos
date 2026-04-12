@@ -1,0 +1,85 @@
+{% load mesenu_tags %}
+{% for order in orders %}
+<tr id="order-row-{{ order.id }}">
+    <td style="font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap;">
+        #{{ order.order_number|stringformat:"s"|slice:":8"|upper }}
+    </td>
+    <td style="font-size:13px;">
+        <div style="font-weight:500;">{{ order.client.full_name|default:"Sin nombre" }}</div>
+        <div style="font-size:11px;color:var(--text-3);">{{ order.client.phone }}</div>
+        {% if order.delivery_address %}
+        <div style="font-size:11px;color:var(--green-dark);margin-top:2px;">🛵 {{ order.delivery_address.address }}</div>
+        {% elif order.order_type == 'delivery' %}
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">🛵 Domicilio (sin dir.)</div>
+        {% elif order.order_type == 'takeaway' %}
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">🛍 Para llevar</div>
+        {% elif order.order_type == 'on_site' %}
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">🪑 En el lugar</div>
+        {% endif %}
+        {% with client_addr=order.client.default_addresses.0 %}
+        {% if client_addr and not order.delivery_address %}
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">📍 {{ client_addr.address }}</div>
+        {% endif %}
+        {% endwith %}
+        {% if order.notes %}
+        <div style="font-size:11px;color:var(--text-2);margin-top:2px;font-style:italic;">"{{ order.notes }}"</div>
+        {% endif %}
+    </td>
+    <td>
+        <div style="font-size:13px;font-weight:500;">{{ order.menu.title }}</div>
+        <div style="font-size:11px;color:var(--text-3);">×{{ order.quantity }}</div>
+    </td>
+    <td>
+        <span class="badge {% if order.payment_type == 'fiado' %}badge-preparacion{% else %}badge-confirmado{% endif %}">
+            {{ order.get_payment_type_display }}
+        </span>
+    </td>
+    <td style="font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;">{{ order.total_amount|currency_cop }}</td>
+    <td style="font-size:11px;color:var(--text-3);">{{ order.created_at|date:"j N H:i" }}</td>
+    <td>
+        <span class="badge {{ order.get_status_badge_class }}">{{ order.get_status_display }}</span>
+    </td>
+    <!-- Pagado column -->
+    <td>
+        {% if order.is_paid %}
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--green-dark);background:var(--green-light);border:0.5px solid var(--green-border);border-radius:99px;padding:3px 9px;">✓ Pagado</span>
+        {% else %}
+        <button
+            hx-post="{% url 'orders:mark_paid' order.pk %}"
+            hx-target="#order-row-{{ order.id }}"
+            hx-swap="outerHTML"
+            style="font-size:11px;padding:3px 9px;border-radius:99px;cursor:pointer;white-space:nowrap;{% if order.payment_type == 'fiado' %}color:#B45309;border:0.5px solid #FCD34D;background:#FEF3C7;{% else %}border:0.5px solid var(--border);background:white;color:var(--text-2);{% endif %}">
+            Marcar pagado
+        </button>
+        {% endif %}
+    </td>
+    <!-- Acción column -->
+    <td>
+        <div x-data="{ open: false }" style="position:relative;">
+            <button @click="open=!open" class="btn-ghost" style="padding:4px 8px;font-size:11px;">
+                Acción ▾
+            </button>
+            <div x-show="open" @click.outside="open=false"
+                 style="position:absolute;right:0;background:white;border:1px solid var(--border);border-radius:6px;box-shadow:var(--shadow-md);z-index:20;min-width:160px;padding:4px 0;">
+                {% for next_status, label in order.possible_transitions.items %}
+                <button
+                    hx-post="{% url 'orders:change_status' order.pk %}"
+                    hx-vals='{"status": "{{ next_status }}"}'
+                    hx-target="#order-row-{{ order.id }}"
+                    hx-swap="outerHTML"
+                    @click="open=false"
+                    style="width:100%;text-align:left;padding:8px 14px;font-size:12px;background:none;border:none;cursor:pointer;color:var(--text-1);">
+                    {{ label }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">
+        Sin pedidos{% if request.GET.status %} con estado "{{ request.GET.status }}"{% endif %}
+    </td>
+</tr>
+{% endfor %}

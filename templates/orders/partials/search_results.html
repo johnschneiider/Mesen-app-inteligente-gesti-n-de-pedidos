@@ -1,0 +1,17 @@
+{% load mesenu_tags %}
+{% if results %}
+{% for order in results %}
+<tr id="order-row-{{ order.id }}">
+    <td style="font-size:11px;color:var(--text-3);">#{{ order.order_number|stringformat:"s"|slice:":8"|upper }}</td>
+    <td style="font-size:13px;">{{ order.client.full_name|default:order.client.phone }}</td>
+    <td style="font-size:13px;">{{ order.menu.title }} ×{{ order.quantity }}</td>
+    <td><span class="badge {% if order.payment_type == 'fiado' %}badge-preparacion{% else %}badge-confirmado{% endif %}">{{ order.get_payment_type_display }}</span></td>
+    <td>{{ order.total_amount|currency_cop }}</td>
+    <td>{{ order.created_at|date:"j N H:i" }}</td>
+    <td><span class="badge {{ order.get_status_badge_class }}">{{ order.get_status_display }}</span></td>
+    <td></td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-3);">Sin resultados</td></tr>
+{% endif %}

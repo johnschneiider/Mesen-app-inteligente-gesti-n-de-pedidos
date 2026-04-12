@@ -1,0 +1,61 @@
+{% extends 'base_superadmin.html' %}
+{% load mesenu_tags %}
+
+{% block title %}Tickets de soporte — Superadmin{% endblock %}
+
+{% block superadmin_content %}
+<div class="page-header">
+    <h1>Tickets de soporte</h1>
+    <div style="display:flex;gap:8px;">
+        <a href="?status=open" class="filter-pill {% if request.GET.status == 'open' or not request.GET.status %}active{% endif %}">Abiertos</a>
+        <a href="?status=in_progress" class="filter-pill {% if request.GET.status == 'in_progress' %}active{% endif %}">En progreso</a>
+        <a href="?status=closed" class="filter-pill {% if request.GET.status == 'closed' %}active{% endif %}">Cerrados</a>
+    </div>
+</div>
+
+<div class="card" style="padding:0;overflow:hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Negocio</th>
+                <th>Asunto</th>
+                <th>Categoría</th>
+                <th>Mensajes</th>
+                <th>Creado</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            <tr>
+                <td style="font-size:11px;color:var(--text-3);">{{ ticket.pk }}</td>
+                <td style="font-size:13px;font-weight:500;">{{ ticket.business.name }}</td>
+                <td style="font-size:13px;">{{ ticket.subject }}</td>
+                <td style="font-size:12px;color:var(--text-2);">{{ ticket.get_category_display }}</td>
+                <td style="font-size:12px;color:var(--text-3);">{{ ticket.messages.count }}</td>
+                <td style="font-size:11px;color:var(--text-3);">{{ ticket.created_at|date:"j N Y H:i" }}</td>
+                <td>
+                    <span class="badge {% if ticket.status == 'open' %}badge-pendiente{% elif ticket.status == 'in_progress' %}badge-preparacion{% else %}badge-listo{% endif %}">
+                        {{ ticket.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'superadmin:ticket_detail' ticket.pk %}" style="font-size:12px;color:var(--green);text-decoration:none;">Responder →</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">Sin tickets</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<div style="display:flex;justify-content:flex-end;gap:6px;margin-top:12px;">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-ghost" style="padding:5px 10px;font-size:12px;">← Anterior</a>{% endif %}
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-ghost" style="padding:5px 10px;font-size:12px;">Siguiente →</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

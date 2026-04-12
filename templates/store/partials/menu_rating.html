@@ -1,0 +1,24 @@
+{% load mesenu_tags %}
+<div style="padding:8px 0;">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+        <div style="width:5px;height:5px;border-radius:50%;background:var(--green);"></div>
+        <span style="font-size:12px;color:var(--text-3);">Califica tu experiencia</span>
+    </div>
+    <form hx-post="{% url 'store:rate_menu' business_slug menu.pk %}"
+          hx-target="#menu-card-{{ menu.id }}"
+          hx-swap="none">
+        {% csrf_token %}
+        <div style="display:flex;gap:6px;justify-content:center;margin-bottom:10px;" id="star-row-{{ menu.id }}">
+            {% for i in "12345" %}
+            <label style="cursor:pointer;">
+                <input type="radio" name="rating" value="{{ forloop.counter }}" style="display:none;"
+                       onchange="document.querySelectorAll('#star-row-{{ menu.id }} svg').forEach((s,idx) => s.style.fill = idx < {{ forloop.counter }} ? '#E09900' : '#D0CEC7')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#D0CEC7" style="transition:fill .15s;">
+                    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+                </svg>
+            </label>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;padding:8px;">Enviar calificación</button>
+    </form>
+</div>

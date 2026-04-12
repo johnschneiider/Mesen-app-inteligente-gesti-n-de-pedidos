@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mesenú — Gestión para restaurantes colombianos{% endblock %}
+
+{% block content %}
+<style>
+.hero { min-height: 100vh; display: flex; flex-direction: column; }
+.hero-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: var(--nav-h);
+    background: var(--white); border-bottom: 0.5px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+}
+.hero-nav-actions { display: flex; gap: 10px; align-items: center; }
+.hero-body {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 60px 40px; background: var(--page-bg);
+}
+.hero-content { max-width: 580px; text-align: center; }
+.hero-badge {
+    display: inline-block;
+    background: var(--green-light); color: var(--green-dark);
+    font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 99px; margin-bottom: 20px;
+    border: 0.5px solid var(--green-border);
+}
+.hero-title {
+    font-size: 40px; font-weight: 600; letter-spacing: -1px;
+    line-height: 1.15; margin-bottom: 16px; color: var(--text-1);
+}
+.hero-title span { color: var(--green); }
+.hero-desc { font-size: 16px; color: var(--text-2); margin-bottom: 32px; line-height: 1.6; }
+.hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.features-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    max-width: 800px; margin: 48px auto 0;
+}
+.feature-card {
+    background: var(--white); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px;
+    text-align: left;
+}
+.feature-icon {
+    width: 36px; height: 36px; background: var(--green-light);
+    border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+}
+.feature-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.feature-desc { font-size: 12px; color: var(--text-3); line-height: 1.5; }
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+    .hero-nav { padding: 0 16px; }
+    .hero-nav-logo-text { display: none; }
+    .hero-nav-actions .btn-ghost { font-size: 12px; padding: 6px 10px; }
+    .hero-nav-actions .btn-primary { font-size: 12px; padding: 7px 14px; }
+
+    .hero-body { padding: 36px 20px 48px; align-items: flex-start; }
+    .hero-content { text-align: left; max-width: 100%; }
+
+    .hero-badge { font-size: 10px; padding: 4px 12px; }
+    .hero-title { font-size: 28px; letter-spacing: -0.6px; }
+    .hero-desc { font-size: 14px; margin-bottom: 24px; }
+
+    .hero-actions { justify-content: flex-start; }
+    .hero-actions a { flex: 1; text-align: center; }
+
+    .features-grid { grid-template-columns: 1fr; gap: 10px; margin-top: 36px; }
+    .feature-card { padding: 16px; display: flex; align-items: flex-start; gap: 14px; }
+    .feature-icon { flex-shrink: 0; margin-bottom: 0; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .hero-nav { padding: 0 24px; }
+    .hero-body { padding: 48px 24px; }
+    .features-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+
+<div class="hero">
+    <nav class="hero-nav">
+        <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;">
+            <img src="{% static 'img/logo.svg' %}" width="30" height="30" alt="Mesenú">
+            <span class="hero-nav-logo-text" style="font-size:16px;font-weight:600;color:var(--green-dark);">Mesenú</span>
+        </a>
+        <div class="hero-nav-actions">
+            <a href="{% url 'accounts:login' %}" class="btn-ghost hero-nav-login">Iniciar sesión</a>
+            <a href="{% url 'accounts:register' %}" class="btn-primary">Comenzar gratis</a>
+        </div>
+    </nav>
+
+    <div class="hero-body">
+        <div>
+            <div class="hero-content">
+                <div class="hero-badge">Plataforma SaaS para restaurantes</div>
+                <h1 class="hero-title">Tu restaurante, digital<br><span>sin intermediarios</span></h1>
+                <p class="hero-desc">Gestiona pedidos en tiempo real, da crédito a tus clientes corporativos y ofrece tu propio menú del día con Mesenú.</p>
+                <div class="hero-actions">
+                    <a href="{% url 'accounts:register' %}" class="btn-primary" style="font-size:14px;padding:10px 24px;">
+                        Crear mi restaurante
+                    </a>
+                    <a href="#features" class="btn-ghost" style="font-size:14px;padding:10px 20px;">Ver características</a>
+                </div>
+            </div>
+
+            <div class="features-grid" id="features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 9h12M9 3v12" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="feature-title">Pedidos en tiempo real</div>
+                        <div class="feature-desc">Recibe y gestiona pedidos al instante con notificaciones WebSocket.</div>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6" stroke="var(--green)" stroke-width="1.8" fill="none"/><path d="M9 6v4l2.5 2" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="feature-title">Crédito / Fiado nativo</div>
+                        <div class="feature-desc">Gestiona crédito a clientes corporativos — sin Excel, sin WhatsApp.</div>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 14V8l6-5 6 5v6a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="var(--green)" stroke-width="1.8" fill="none"/></svg>
+                    </div>
+                    <div>
+                        <div class="feature-title">Tienda pública propia</div>
+                        <div class="feature-desc">Tu menú en línea en /tienda/mi-restaurante/ sin comisiones.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

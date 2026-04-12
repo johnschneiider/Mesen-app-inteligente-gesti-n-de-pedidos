@@ -1,0 +1,226 @@
+{% extends 'base_negocio.html' %}
+{% block title %}Mi perfil — Mesenú{% endblock %}
+{% block main_content %}
+
+<div class="page-header">
+    <div>
+        <h1>Mi perfil</h1>
+        <div class="subtitle">Gestiona tu cuenta y los datos de tu negocio por separado</div>
+    </div>
+</div>
+
+{% if messages %}
+{% for msg in messages %}
+<div class="alert-{{ msg.tags }}" style="margin-bottom:16px;">{{ msg }}</div>
+{% endfor %}
+{% endif %}
+
+<div style="max-width:600px;display:flex;flex-direction:column;gap:20px;">
+
+    <!-- ══ SECCIÓN 1: CUENTA PERSONAL ══ -->
+    <div class="card" style="padding:0;overflow:hidden;">
+        <!-- Header de sección -->
+        <div style="display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:0.5px solid var(--border);background:var(--page-bg);">
+            <div style="width:34px;height:34px;border-radius:8px;background:var(--green-light,#F0FDF4);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="var(--green)" stroke-width="1.4" fill="none"/><path d="M2 14c0-3 2.7-5 6-5s6 2 6 5" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>
+            </div>
+            <div>
+                <div style="font-size:14px;font-weight:600;color:var(--text-1);">Cuenta personal</div>
+                <div style="font-size:11px;color:var(--text-3);">Tu nombre y foto de perfil · <span style="color:var(--text-2);">{{ request.user.phone }}</span></div>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" style="padding:20px;">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="profile">
+
+            <!-- Nombre -->
+            <div class="form-group">
+                <label class="form-label" for="{{ user_form.full_name.id_for_label }}">Nombre completo</label>
+                {{ user_form.full_name }}
+                {% if user_form.full_name.errors %}
+                <div class="form-error">{{ user_form.full_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Teléfono (solo lectura) -->
+            <div class="form-group">
+                <label class="form-label">Teléfono (tu usuario)</label>
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-md,8px);">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="color:var(--text-3);flex-shrink:0;"><path d="M2 2.5C2 2.5 3 1 4.5 2S5.5 5 5 5.5C4.5 6 3 7.5 4 8.5s2.5 2 3.5 1.5 1-1.5 1.5-2 2.5-.5 2.5 1-2 3-4 2.5S1 8 1 6s1-3.5 1-3.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg>
+                    <span style="font-size:13px;color:var(--text-2);">{{ request.user.phone }}</span>
+                    <span style="margin-left:auto;font-size:10px;background:var(--border);color:var(--text-3);padding:2px 7px;border-radius:4px;">no editable</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:4px;">El teléfono es tu identificador de cuenta y no puede cambiarse.</div>
+            </div>
+
+            <!-- Avatar -->
+            <div class="form-group">
+                <label class="form-label">Foto de perfil</label>
+                {% if request.user.avatar %}
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <img src="{{ request.user.avatar.url }}" alt="avatar" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid var(--border);">
+                    <span style="font-size:12px;color:var(--text-3);">Foto actual</span>
+                </div>
+                {% endif %}
+                <div class="file-upload file-upload-sm" x-data="fileUpload()" :class="{ 'has-file': fileName }">
+                    <div class="file-upload-icon">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 11l3.5-3.5L7 10l2.5-3L13 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    </div>
+                    <div>
+                        <div class="file-upload-label" x-text="fileName || 'Elegir foto'"></div>
+                        <div class="file-upload-hint">JPG, PNG · máx. 5 MB</div>
+                    </div>
+                    <input type="file" name="avatar" accept="image/*" @change="pick($event)">
+                </div>
+                {% if user_form.avatar.errors %}
+                <div class="form-error">{{ user_form.avatar.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn-primary">Guardar cuenta</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- ══ SECCIÓN 2: DATOS DEL NEGOCIO ══ -->
+    {% if biz_form %}
+    <div class="card" style="padding:0;overflow:hidden;">
+        <!-- Header de sección -->
+        <div style="display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:0.5px solid var(--border);background:var(--page-bg);">
+            <div style="width:34px;height:34px;border-radius:8px;background:#FFF7ED;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 7.5V14h4v-3h4v3h4V7.5" stroke="#D97706" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M1 7.5L8 2l7 5.5" stroke="#D97706" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            </div>
+            <div>
+                <div style="font-size:14px;font-weight:600;color:var(--text-1);">Datos del negocio</div>
+                <div style="font-size:11px;color:var(--text-3);">
+                    Información pública de tu restaurante ·
+                    <a href="{{ request.user.business.get_store_url }}" target="_blank" style="color:var(--green);text-decoration:none;font-weight:500;">ver tienda ↗</a>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" style="padding:20px;">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="business">
+
+            <!-- Nombre -->
+            <div class="form-group">
+                <label class="form-label" for="{{ biz_form.name.id_for_label }}">Nombre del negocio *</label>
+                {{ biz_form.name }}
+                {% if biz_form.name.errors %}
+                <div class="form-error">{{ biz_form.name.errors.0 }}</div>
+                {% endif %}
+                <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Cambia el nombre solo si es necesario — también cambia la URL de tu tienda.</div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="form-group">
+                <label class="form-label" for="{{ biz_form.description.id_for_label }}">Descripción</label>
+                {{ biz_form.description }}
+                {% if biz_form.description.errors %}
+                <div class="form-error">{{ biz_form.description.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Teléfono y Ciudad en fila -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                    <label class="form-label" for="{{ biz_form.phone.id_for_label }}">Teléfono del negocio</label>
+                    {{ biz_form.phone }}
+                    {% if biz_form.phone.errors %}
+                    <div class="form-error">{{ biz_form.phone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ biz_form.city.id_for_label }}">Ciudad</label>
+                    {{ biz_form.city }}
+                    {% if biz_form.city.errors %}
+                    <div class="form-error">{{ biz_form.city.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Dirección -->
+            <div class="form-group">
+                <label class="form-label" for="{{ biz_form.address.id_for_label }}">Dirección</label>
+                {{ biz_form.address }}
+                {% if biz_form.address.errors %}
+                <div class="form-error">{{ biz_form.address.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- URL pública (solo lectura, informativa) -->
+            <div class="form-group">
+                <label class="form-label">URL de tu tienda pública</label>
+                <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-md,8px);">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 6.5c0-1.1.5-2 1.5-2.5M8.5 6.5c0 1.1-.5 2-1.5 2.5M2 6.5h9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg>
+                    <span style="font-size:12px;color:var(--text-2);">mesenú.co/tienda/{{ request.user.business.slug }}/</span>
+                </div>
+            </div>
+
+            <!-- Logo -->
+            <div class="form-group">
+                <label class="form-label">Logo del negocio</label>
+                {% if request.user.business.logo %}
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <img src="{{ request.user.business.logo.url }}" alt="logo" style="width:56px;height:56px;object-fit:contain;border:1px solid var(--border);border-radius:8px;padding:4px;background:white;">
+                    <span style="font-size:12px;color:var(--text-3);">Logo actual</span>
+                </div>
+                {% endif %}
+                <div class="file-upload" x-data="fileUpload()" :class="{ 'has-file': fileName }">
+                    <div class="file-upload-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.3" fill="none"/><circle cx="5.5" cy="5.5" r="1.2" fill="currentColor" opacity=".6"/><path d="M2 11l4-4 2.5 2.5L11 7l3 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    </div>
+                    <div class="file-upload-label" x-text="fileName || 'Subir logo'"></div>
+                    <div class="file-upload-hint">PNG transparente recomendado · máx. 5 MB</div>
+                    <img class="file-upload-preview" :src="previewUrl" alt="preview">
+                    <input type="file" name="logo" accept="image/*" @change="pick($event)">
+                </div>
+                {% if biz_form.logo.errors %}
+                <div class="form-error">{{ biz_form.logo.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Portada -->
+            <div class="form-group">
+                <label class="form-label">Imagen de portada</label>
+                {% if request.user.business.cover_image %}
+                <div style="margin-bottom:8px;">
+                    <img src="{{ request.user.business.cover_image.url }}" alt="portada" style="width:100%;max-height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+                </div>
+                {% endif %}
+                <div class="file-upload" x-data="fileUpload()" :class="{ 'has-file': fileName }">
+                    <div class="file-upload-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 4h14M1 8h14M1 12h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    </div>
+                    <div class="file-upload-label" x-text="fileName || 'Subir imagen de portada'"></div>
+                    <div class="file-upload-hint">Recomendado 1200×400 px · máx. 5 MB</div>
+                    <img class="file-upload-preview" :src="previewUrl" alt="preview">
+                    <input type="file" name="cover_image" accept="image/*" @change="pick($event)">
+                </div>
+                {% if biz_form.cover_image.errors %}
+                <div class="form-error">{{ biz_form.cover_image.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn-primary">Guardar negocio</button>
+            </div>
+        </form>
+    </div>
+
+    {% else %}
+    <div class="card" style="text-align:center;padding:40px 24px;">
+        <div style="width:44px;height:44px;border-radius:10px;background:#FFF7ED;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 9V17h5v-4h4v4h5V9" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M1 9L10 2l9 7" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-1);margin-bottom:6px;">¿Tienes un restaurante?</div>
+        <p style="color:var(--text-3);font-size:13px;margin-bottom:20px;">Activa el modo negocio para gestionar pedidos, menús y más.</p>
+        <a href="{% url 'accounts:upgrade_to_business' %}" class="btn-primary">Crear mi negocio</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% load mesenu_tags %}
+<div>
+    {% if menu.featured_photo %}
+    <img src="{{ menu.featured_photo.image.url }}" alt="{{ menu.title }}"
+         style="width:100%;height:200px;object-fit:cover;border-radius:12px;margin-bottom:18px;display:block;">
+    {% endif %}
+
+    <h2 style="font-size:20px;font-weight:700;letter-spacing:-0.4px;margin-bottom:4px;">{{ menu.title }}</h2>
+    {% if menu.description %}
+    <p style="font-size:13px;color:var(--text-2);line-height:1.5;margin-bottom:12px;">{{ menu.description }}</p>
+    {% endif %}
+
+    {% if menu.ingredients.exists %}
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">
+        {% for ing in menu.ingredients.all %}
+        <span class="ingredient-tag">{{ ing.name }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div style="font-size:26px;font-weight:800;color:var(--green-dark);letter-spacing:-0.8px;margin-bottom:20px;">{{ menu.price|currency_cop }}</div>
+
+    <form
+        hx-post="{% url 'store:create_order' business_slug menu.pk %}"
+        hx-target="#modal-content"
+        hx-swap="innerHTML"
+        x-data="{ payMethod: 'cash', orderType: 'on_site' }">
+        {% csrf_token %}
+
+        <!-- ── TUS DATOS ── -->
+        <div style="background:var(--page-bg);border-radius:12px;padding:14px;margin-bottom:16px;border:0.5px solid var(--border);">
+            <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Tus datos</div>
+
+            <!-- Name -->
+            <div style="margin-bottom:8px;">
+                <input type="text" name="full_name"
+                       value="{{ consumer.full_name }}"
+                       placeholder="Tu nombre completo"
+                       required
+                       style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;background:white;width:100%;box-sizing:border-box;outline:none;transition:border-color 0.15s;"
+                       onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+
+            <!-- Phone (account identifier, read-only) -->
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;color:var(--text-3);">
+                    <path d="M2.5 2.5C2.5 2.5 3.5 1 5 2S6 5 5.5 5.5C5 6 3.5 7.5 4.5 8.5s2.5 2 3.5 1.5 1-1.5 1.5-2 2.5-.5 2.5 1-2 3-4 2.5S1.5 8.5 1.5 6.5s1-4 1-4z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+                </svg>
+                <span style="font-size:13px;color:var(--text-1);flex:1;">{{ consumer.phone }}</span>
+                <span style="font-size:10px;color:var(--text-3);background:var(--border);border-radius:4px;padding:2px 6px;">cuenta</span>
+            </div>
+
+            <!-- Address (main, read-only) -->
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:white;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;color:var(--text-3);">
+                    <path d="M7 1.5a5.5 5.5 0 0 1 5.5 5.5c0 3.5-5.5 5.5-5.5 5.5S1.5 10.5 1.5 7A5.5 5.5 0 0 1 7 1.5Zm0 2.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                </svg>
+                {% if saved_addresses %}
+                <span style="font-size:13px;color:var(--text-1);flex:1;white-space:pre-line;">{{ saved_addresses.0.address }}</span>
+                <span style="font-size:10px;color:var(--text-3);background:var(--border);border-radius:4px;padding:2px 6px;">dirección</span>
+                {% else %}
+                <span style="font-size:13px;color:var(--text-3);flex:1;">Sin dirección registrada</span>
+                {% endif %}
+            </div>
+
+            <!-- Address (shown only when delivery is selected) -->
+            <div x-show="orderType === 'delivery'" x-transition style="display:none;">
+                <input type="text" name="address_line"
+                       placeholder="Dirección de entrega (Cra 10 # 45-20, apto 301…)"
+                       {% if saved_addresses %}value="{{ saved_addresses.0.address }}"{% endif %}
+                       style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;background:white;width:100%;box-sizing:border-box;outline:none;transition:border-color 0.15s;"
+                       onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'">
+                {% if saved_addresses %}
+                <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:5px;">
+                    <span style="font-size:11px;color:var(--text-3);width:100%;margin-bottom:2px;">Direcciones guardadas:</span>
+                    {% for addr in saved_addresses %}
+                    <button type="button"
+                            onclick="this.closest('div').previousElementSibling.value='{{ addr.address|escapejs }}'"
+                            style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;background:white;cursor:pointer;color:var(--text-2);">
+                        {{ addr.label|default:"Dir." }} — {{ addr.address }}
+                    </button>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ── CANTIDAD ── -->
+        <div style="margin-bottom:16px;">
+            <label style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:8px;">Cantidad</label>
+            <div style="display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;width:fit-content;background:white;">
+                <button type="button"
+                        onclick="const i=this.nextElementSibling;if(parseInt(i.value)>1)i.value=parseInt(i.value)-1;"
+                        style="width:36px;height:36px;border:none;background:transparent;font-size:16px;cursor:pointer;color:var(--text-2);display:flex;align-items:center;justify-content:center;">−</button>
+                <input type="number" name="quantity" value="1" min="1"
+                       {% if menu.units_available %}max="{{ menu.units_remaining }}"{% endif %}
+                       style="width:44px;height:36px;border:none;border-left:1px solid var(--border);border-right:1px solid var(--border);text-align:center;font-size:14px;font-weight:600;background:white;-moz-appearance:textfield;"
+                       oninput="if(this.value<1)this.value=1;">
+                <button type="button"
+                        onclick="const i=this.previousElementSibling;const max=i.getAttribute('max');if(!max||parseInt(i.value)<parseInt(max))i.value=parseInt(i.value)+1;"
+                        style="width:36px;height:36px;border:none;background:transparent;font-size:16px;cursor:pointer;color:var(--text-2);display:flex;align-items:center;justify-content:center;">+</button>
+            </div>
+        </div>
+
+        <!-- ── FORMA DE PAGO ── -->
+        <div style="margin-bottom:16px;">
+            <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Forma de pago</div>
+            <div class="chip-group">
+                {% for opt in payment_options %}
+                <label @click="payMethod='{{ opt.val }}'"
+                       class="chip-selector" :class="payMethod==='{{ opt.val }}' ? 'chip-active' : ''">
+                    <input type="radio" name="payment_type" value="{{ opt.val }}"
+                           {% if opt.val == 'cash' %}checked{% endif %}
+                           style="position:absolute;opacity:0;pointer-events:none;">
+                    <span style="font-size:15px;line-height:1;">{{ opt.icon }}</span>
+                    {{ opt.label }}
+                    <svg x-show="payMethod==='{{ opt.val }}'"
+                         width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0;">
+                        <path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ── TIPO DE ENTREGA ── -->
+        <div style="margin-bottom:16px;">
+            <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Tipo de entrega</div>
+            <div class="chip-group">
+                {% for ot in order_types %}
+                <label @click="orderType='{{ ot.val }}'"
+                       class="chip-selector" :class="orderType==='{{ ot.val }}' ? 'chip-active' : ''">
+                    <input type="radio" name="order_type" value="{{ ot.val }}"
+                           {% if ot.val == 'on_site' %}checked{% endif %}
+                           style="position:absolute;opacity:0;pointer-events:none;">
+                    <span style="font-size:15px;line-height:1;">{{ ot.icon }}</span>
+                    {{ ot.label }}
+                    <svg x-show="orderType==='{{ ot.val }}'"
+                         width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0;">
+                        <path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ── NOTA ── -->
+        <div style="margin-bottom:20px;">
+            <label style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:8px;">Nota (opcional)</label>
+            <textarea name="notes" rows="2" placeholder="Sin cebolla, extra salsa…"
+                      style="width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;resize:none;box-sizing:border-box;outline:none;transition:border-color 0.15s;background:white;"
+                      onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        </div>
+
+        <button type="submit"
+                style="width:100%;padding:15px;background:var(--green);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;">
+            Confirmar pedido • {{ menu.price|currency_cop }}
+        </button>
+    </form>
+</div>

@@ -1,0 +1,12 @@
+{% extends 'base_negocio.html' %}
+{% block title %}Negocio suspendido — Mesenú{% endblock %}
+{% block main_content %}
+<div style="max-width:480px;margin:80px auto;text-align:center;">
+    <div style="width:64px;height:64px;background:var(--red-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="var(--red)" stroke-width="2"/><path d="M14 9v6M14 18v1" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </div>
+    <h1 style="margin-bottom:12px;">Negocio suspendido</h1>
+    <p style="color:var(--text-2);margin-bottom:24px;">Tu negocio ha sido suspendido temporalmente. Contacta a soporte para resolverlo.</p>
+    <a href="{% url 'support:list' %}" class="btn-primary">Contactar soporte</a>
+</div>
+{% endblock %}

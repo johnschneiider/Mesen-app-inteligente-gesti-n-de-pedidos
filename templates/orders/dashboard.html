@@ -1,0 +1,203 @@
+{% extends 'base_negocio.html' %}
+{% load static %}
+{% load mesenu_tags %}
+
+{% block title %}Inicio — {{ request.user.business.name }}{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block main_content %}
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <div>
+        <h1>Vista general</h1>
+        <div class="subtitle">
+            {% now "l j \d\e F" %} · Semana {% now "W" %} de {% now "Y" %}
+        </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <select class="btn-ghost" style="font-size:12px;" id="period-select" onchange="window.location.href='?days='+this.value">
+            <option value="7" {% if not request.GET.days or request.GET.days == '7' %}selected{% endif %}>Últimos 7 días</option>
+            <option value="30" {% if request.GET.days == '30' %}selected{% endif %}>Últimos 30 días</option>
+            <option value="90" {% if request.GET.days == '90' %}selected{% endif %}>Últimos 90 días</option>
+        </select>
+        <a href="{% url 'menus:create' %}" class="btn-primary">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Nuevo menú
+        </a>
+    </div>
+</div>
+
+<!-- Stats cards -->
+<div class="stats-grid">
+    <div class="card stat-card">
+        <div class="label">Pedidos hoy</div>
+        <div class="value">{{ stats.orders_today }}</div>
+        <div class="sub">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 7l3-4 3 4" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="up">+{{ stats.orders_today }} vs ayer</span>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Ingresos hoy</div>
+        <div class="value" style="font-size:20px;">{{ stats.revenue_today|currency_cop }}</div>
+        <div class="sub">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 7l3-4 3 4" stroke="var(--green)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="up">ingresos del día</span>
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">En preparación</div>
+        <div class="value" style="color:var(--amber);">{{ stats.preparing_count }}</div>
+        <div class="sub" style="color:var(--amber);">
+            pedidos activos ahora
+        </div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Fiado pendiente</div>
+        <div class="value" style="color:var(--red);font-size:20px;">{{ stats.fiado_total|currency_cop }}</div>
+        <div class="sub">{{ stats.fiado_clients }} cliente{{ stats.fiado_clients|pluralize:"s" }}</div>
+    </div>
+</div>
+
+<!-- Chart + Top clients -->
+<div class="content-grid-2" style="margin-bottom:20px;">
+    <!-- Weekly orders bar chart -->
+    <div class="card">
+        <div class="section-header">
+            <h2>Pedidos esta semana</h2>
+            <span style="font-size:22px;font-weight:600;letter-spacing:-0.5px;">
+                {{ weekly_total }}
+                <span style="font-size:12px;font-weight:400;color:var(--text-3);">↑8%</span>
+            </span>
+        </div>
+        <div style="position:relative;height:100px;">
+            <canvas id="weeklyChart"></canvas>
+        </div>
+        <div style="display:flex;justify-content:space-around;margin-top:8px;">
+            {% for lbl in days_labels %}
+            <span style="font-size:10px;color:var(--text-3);">{{ lbl }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Top clients -->
+    <div class="card">
+        <div class="section-header">
+            <h2>Top clientes</h2>
+        </div>
+        {% for c in top_clients %}
+        <div class="client-row">
+            <div class="avatar" style="width:30px;height:30px;font-size:10px;flex-shrink:0;">
+                {{ c.client__full_name|default:"?"|initials }}
+            </div>
+            <div class="client-info">
+                <div class="name">{{ c.client__full_name|default:c.client__phone }}</div>
+                <div class="meta">{{ c.order_count }} pedido{{ c.order_count|pluralize:"s" }}</div>
+                <div class="progress-bar" style="width:100px;margin-top:4px;">
+                    <div class="progress-fill" style="width:{{ c.total|floatformat:0 }}%;max-width:100%;"></div>
+                </div>
+            </div>
+            <div class="client-amount">{{ c.total|currency_cop }}</div>
+        </div>
+        {% empty %}
+        <div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">Sin pedidos aún</div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Recent orders -->
+<div class="card">
+    <div class="section-header">
+        <h2>Pedidos recientes</h2>
+        <div style="display:flex;gap:6px;align-items:center;">
+            <div class="filter-pills">
+                <a href="?" class="filter-pill {% if not request.GET.status %}active{% endif %}">Todos</a>
+                <a href="?status=ready" class="filter-pill {% if request.GET.status == 'ready' %}active{% endif %}">Listo</a>
+                <a href="?status=preparing" class="filter-pill {% if request.GET.status == 'preparing' %}active{% endif %}">En prep.</a>
+                <a href="?status=pending" class="filter-pill {% if request.GET.status == 'pending' %}active{% endif %}">Pendiente</a>
+            </div>
+            <a href="{% url 'orders:list' %}" style="font-size:12px;color:var(--green);text-decoration:none;white-space:nowrap;">Ver todos →</a>
+        </div>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Pedido</th>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Monto</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in recent_orders %}
+            <tr id="order-row-{{ order.id }}">
+                <td style="font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums;">{{ order.order_number }}</td>
+                <td>
+                    <div style="font-size:13px;font-weight:500;">{{ order.menu.title }}</div>
+                    <div style="font-size:11px;color:var(--text-3);">×{{ order.quantity }}</div>
+                </td>
+                <td style="font-size:13px;">{{ order.client.full_name|default:order.client.phone }}</td>
+                <td>
+                    <span class="badge {% if order.payment_type == 'fiado' %}badge-preparacion{% else %}badge-confirmado{% endif %}">
+                        {{ order.get_payment_type_display }}
+                    </span>
+                </td>
+                <td style="font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;">{{ order.total_amount|currency_cop }}</td>
+                <td>
+                    <span class="badge {{ order.get_status_badge_class }}">{{ order.get_status_display }}</span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-3);">Sin pedidos todavía</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Fiado alert -->
+    {% if stats.fiado_total > 0 %}
+    <div class="alert-fiado" style="margin-top:16px;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v4M7 9.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span>{{ stats.fiado_clients }} pedido{{ stats.fiado_clients|pluralize:"s" }} con pago fiado pendiente · Total: {{ stats.fiado_total|currency_cop }}</span>
+        <a href="{% url 'orders:clients' %}" style="margin-left:auto;white-space:nowrap;color:var(--amber);font-weight:500;text-decoration:none;font-size:11px;">Gestionar crédito →</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    const counts = {{ week_counts|safe }};
+    const labels = {{ days_labels|safe }};
+    const maxVal = Math.max(...counts, 1);
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: counts,
+                backgroundColor: counts.map((_, i) =>
+                    i === new Date().getDay() === 0 ? 6 : new Date().getDay() ? '#1D9E75' : '#E1F5EE'
+                ),
+                borderRadius: 4,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.raw} pedidos` } } },
+            scales: {
+                x: { grid: { display: false }, border: { display: false }, ticks: { color: '#A3A39E', font: { size: 10 } } },
+                y: { display: false, max: maxVal * 1.3 }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

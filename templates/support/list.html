@@ -1,0 +1,87 @@
+{% extends 'base_negocio.html' %}
+{% load mesenu_tags %}
+
+{% block title %}Soporte — Mesenú{% endblock %}
+
+{% block main_content %}
+<div class="page-header">
+    <div>
+        <h1>Soporte</h1>
+        <div class="subtitle">Envía un ticket y te respondemos pronto</div>
+    </div>
+    <a href="{% url 'support:list' %}" class="btn-primary">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Nuevo ticket
+    </a>
+</div>
+
+{% if messages %}
+{% for msg in messages %}
+<div class="alert-success" style="margin-bottom:12px;">{{ msg }}</div>
+{% endfor %}
+{% endif %}
+
+<!-- New ticket form inline if no tickets -->
+{% if not tickets %}
+<div class="card" style="max-width:560px;">
+    <div class="section-header" style="margin-bottom:16px;"><h2>Abrir ticket de soporte</h2></div>
+    <form method="post" action="{% url 'support:list' %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label">Asunto *</label>
+            <input type="text" name="subject" class="form-input" placeholder="¿En qué podemos ayudarte?" required>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Categoría</label>
+            <select name="category" class="form-input">
+                <option value="billing">Facturación y pagos</option>
+                <option value="technical">Problema técnico</option>
+                <option value="feature">Solicitud de funcionalidad</option>
+                <option value="other">Otro</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Descripción *</label>
+            <textarea name="message" class="form-input" rows="4" placeholder="Descríbenos tu problema con detalle…" required></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Enviar ticket</button>
+    </form>
+</div>
+{% else %}
+
+<div class="card" style="padding:0;overflow:hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Ticket</th>
+                <th>Asunto</th>
+                <th>Categoría</th>
+                <th>Mensajes</th>
+                <th>Creado</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            <tr>
+                <td style="font-size:11px;color:var(--text-3);">#{{ ticket.pk }}</td>
+                <td style="font-size:13px;font-weight:500;">{{ ticket.subject }}</td>
+                <td style="font-size:12px;color:var(--text-2);">{{ ticket.get_category_display }}</td>
+                <td style="font-size:12px;color:var(--text-3);">{{ ticket.messages.count }}</td>
+                <td style="font-size:11px;color:var(--text-3);">{{ ticket.created_at|date:"j N Y" }}</td>
+                <td>
+                    <span class="badge {% if ticket.status == 'open' %}badge-pendiente{% elif ticket.status == 'in_progress' %}badge-preparacion{% else %}badge-listo{% endif %}">
+                        {{ ticket.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'support:detail' ticket.pk %}" style="font-size:12px;color:var(--green);text-decoration:none;">Ver →</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

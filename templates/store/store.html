@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load mesenu_tags %}
+
+{% block title %}{{ business.name }} — Mesenú{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/store.css' %}">{% endblock %}
+
+{% block content %}
+<div class="store-page" x-data="{ modalOpen: false, navVisible: false }"
+     @keydown.escape.window="modalOpen = false"
+     @scroll.window="navVisible = (window.scrollY > 200)">
+
+    <!-- ── STICKY NAV (appears after hero is scrolled past) ── -->
+    <nav class="store-sticky-nav" :class="navVisible ? 'store-sticky-nav--visible' : ''">
+        <a href="/" class="store-sticky-nav-logo">
+            <img src="{% static 'img/logo.svg' %}" width="18" height="18" alt="Mesenú">
+            <span>Mesenú</span>
+        </a>
+        <div class="store-sticky-nav-biz">
+            <div class="store-sticky-nav-avatar">
+                {% if business.logo %}
+                <img src="{{ business.logo.url }}" alt="{{ business.name }}">
+                {% else %}
+                <span>{{ business.name|initials }}</span>
+                {% endif %}
+            </div>
+            <span>{{ business.name }}</span>
+        </div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'accounts:consumer_dashboard' %}" class="store-sticky-nav-user">
+            {% if user.avatar %}
+            <img src="{{ user.avatar.url }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            {% else %}
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6.5" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+            {% endif %}
+        </a>
+        {% else %}
+        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="store-sticky-nav-login">Entrar</a>
+        {% endif %}
+    </nav>
+
+    <!-- ── HERO ── -->
+    <div class="store-hero">
+        {% if business.cover_image %}
+        <img src="{{ business.cover_image.url }}" alt="{{ business.name }}" class="store-hero-img">
+        {% else %}
+        <div class="store-hero-img store-hero-placeholder"></div>
+        {% endif %}
+        <div class="store-hero-overlay"></div>
+
+        <!-- Top bar -->
+        <div class="store-topbar">
+            <a href="/" class="store-topbar-logo">
+                <img src="{% static 'img/logo.svg' %}" width="22" height="22" alt="Mesenú">
+                Mesenú
+            </a>
+            <!-- User menu -->
+            {% if user.is_authenticated %}
+            <div x-data="{ userOpen: false }" style="position:relative;">
+                <button @click="userOpen=!userOpen"
+                        style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.55);cursor:pointer;backdrop-filter:blur(4px);">
+                    {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">
+                    {% else %}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6.5" r="3" stroke="white" stroke-width="1.5" fill="none"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+                    {% endif %}
+                </button>
+                <div x-show="userOpen" @click.outside="userOpen=false"
+                     style="position:absolute;top:44px;right:0;background:white;border:0.5px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.14);z-index:200;min-width:200px;padding:6px 0;display:none;" x-transition>
+                    <div style="padding:10px 14px 8px;border-bottom:0.5px solid var(--border);margin-bottom:4px;">
+                        <div style="font-size:13px;font-weight:600;color:var(--text-1);">{{ user.full_name|default:"Mi cuenta" }}</div>
+                        <div style="font-size:11px;color:var(--text-3);">{{ user.phone }}</div>
+                    </div>
+                    <a href="{% url 'accounts:consumer_dashboard' %}"
+                       style="display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;color:var(--text-1);text-decoration:none;">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><rect x="8" y="1" width="5" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><rect x="1" y="8" width="5" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><rect x="8" y="8" width="5" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>
+                        Mis pedidos
+                    </a>
+                    <a href="{% url 'accounts:consumer_edit' %}"
+                       style="display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;color:var(--text-1);text-decoration:none;">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M10 2l2 2-7 7H3V9L10 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></svg>
+                        Editar perfil
+                    </a>
+                    {% if user.has_business %}
+                    <a href="{% url 'core:home' %}"
+                       style="display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;color:var(--text-1);text-decoration:none;">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7.5L7 2l6 5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/><path d="M3 6v6h3V9h2v3h3V6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></svg>
+                        Mi negocio
+                    </a>
+                    {% endif %}
+                    <div style="border-top:0.5px solid var(--border);margin:4px 0;"></div>
+                    <a href="{% url 'accounts:logout' %}"
+                       style="display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;color:#DC2626;text-decoration:none;">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 7h7M9 5l3 2-3 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M7 2H2v10h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                        Cerrar sesión
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <a href="{% url 'accounts:login' %}?next={{ request.path }}"
+               style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.55);text-decoration:none;">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6.5" r="3" stroke="white" stroke-width="1.5" fill="none"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Business info on hero -->
+        <div class="store-hero-info">
+            <div class="store-hero-avatar">
+                {% if business.logo %}
+                <img src="{{ business.logo.url }}" alt="{{ business.name }}">
+                {% else %}
+                <span>{{ business.name|initials }}</span>
+                {% endif %}
+            </div>
+            <div>
+                <h1 class="store-hero-name">{{ business.name }}</h1>
+                <div class="store-hero-meta">
+                    {% if business.city %}<span>📍 {{ business.city }}</span>{% endif %}
+                    {% if business.whatsapp %}<a href="https://wa.me/57{{ business.whatsapp }}" target="_blank" class="store-hero-wa">WhatsApp</a>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── BODY ── -->
+    <div class="store-body">
+        {% if business.description %}
+        <p class="store-desc">{{ business.description }}</p>
+        {% endif %}
+
+        <!-- ── INFO CARDS ── -->
+        <div class="store-info-row">
+            {% if business.address %}
+            <div class="store-info-card">
+                <div class="store-info-icon">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5C5.015 1.5 3 3.515 3 6c0 3.375 4.5 7.5 4.5 7.5S12 9.375 12 6c0-2.485-2.015-4.5-4.5-4.5zm0 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="var(--green)"/></svg>
+                </div>
+                <div>
+                    <div class="store-info-label">Dirección</div>
+                    <div class="store-info-value">{{ business.address }}{% if business.city %}, {{ business.city }}{% endif %}</div>
+                </div>
+            </div>
+            {% elif business.city %}
+            <div class="store-info-card">
+                <div class="store-info-icon">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5C5.015 1.5 3 3.515 3 6c0 3.375 4.5 7.5 4.5 7.5S12 9.375 12 6c0-2.485-2.015-4.5-4.5-4.5zm0 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="var(--green)"/></svg>
+                </div>
+                <div>
+                    <div class="store-info-label">Ciudad</div>
+                    <div class="store-info-value">{{ business.city }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if business.phone %}
+            <a href="tel:{{ business.phone }}" class="store-info-card store-info-card--link">
+                <div class="store-info-icon">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M4.5 2.5C4.5 2.5 3 2.5 3 4s1 5 4 7 4 1.5 4 1.5-1.5.5-1.5-1c0-1.5-3-2.5-3-2.5s-1 0-1-1V7l2-1.5V3.5L4.5 2.5z" stroke="var(--green)" stroke-width="1.2" fill="none"/></svg>
+                </div>
+                <div>
+                    <div class="store-info-label">Teléfono</div>
+                    <div class="store-info-value">{{ business.phone }}</div>
+                </div>
+            </a>
+            {% endif %}
+
+            {% if business.phone %}
+            <a href="https://wa.me/57{{ business.phone }}" target="_blank" rel="noopener" class="store-info-card store-info-card--whatsapp">
+                <div class="store-info-icon">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1C3.91 1 1 3.91 1 7.5c0 1.16.3 2.25.82 3.2L1 14l3.37-.81C5.27 13.7 6.37 14 7.5 14 11.09 14 14 11.09 14 7.5S11.09 1 7.5 1z" fill="#25D366"/><path d="M10.5 9.5c-.2.5-.9.9-1.4.95-.46.04-.85-.04-1.73-.42C6.3 9.55 5.3 8.3 5.2 8.17c-.1-.12-.8-1.06-.8-2.02 0-.97.5-1.44.68-1.64.17-.19.38-.24.5-.24h.38c.12 0 .29.05.45.4l.53 1.35c.04.1.02.21-.03.3l-.28.37c-.1.12-.09.22-.03.32.25.42.7.9 1.15 1.2.53.36 1.07.48 1.2.41.13-.07.44-.5.56-.68.1-.16.2-.12.36-.05l1.27.6c.15.07.25.1.28.17.04.07.04.4-.16.9z" fill="white"/></svg>
+                </div>
+                <div>
+                    <div class="store-info-label">WhatsApp</div>
+                    <div class="store-info-value" style="color:#128C7E;font-weight:600;">Enviar mensaje</div>
+                </div>
+            </a>
+            {% endif %}
+
+            {% with total=reviews|length %}
+            {% if total > 0 %}
+            <div class="store-info-card">
+                <div class="store-info-icon">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="#F4B523"><path d="M7.5 1.5l1.6 4.8H14L9.7 9.4l1.5 4.7L7.5 11l-3.7 3.1 1.5-4.7L1 6.3H5.9z"/></svg>
+                </div>
+                <div>
+                    <div class="store-info-label">Reseñas</div>
+                    <div class="store-info-value">{{ total }} comentario{{ total|pluralize:"s" }}</div>
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- MENUS -->
+        <div class="store-section">
+            <div class="store-section-header">
+                <h2 class="store-section-title">Menú del día</h2>
+                {% if menus %}<span class="store-section-count">{{ menus|length }} opción{% if menus|length != 1 %}es{% endif %}</span>{% endif %}
+            </div>
+
+            {% if menus %}
+            <div class="menus-grid">
+                {% for menu in menus %}
+                <div class="menu-card {% if menu.is_sold_out %}menu-card--sold-out{% endif %}">
+
+                    <!-- Photo -->
+                    <div class="menu-card-photo">
+                        {% if menu.featured_photo %}
+                        <img src="{{ menu.featured_photo.image.url }}" alt="{{ menu.title }}">
+                        {% else %}
+                        <div class="menu-card-photo-placeholder">🍽</div>
+                        {% endif %}
+                        {% if menu.is_sold_out %}
+                        <span class="menu-sold-badge">Agotado</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Body -->
+                    <div class="menu-card-body">
+                        <h3 class="menu-card-name">{{ menu.title }}</h3>
+                        {% if menu.description %}
+                        <p class="menu-card-desc">{{ menu.description }}</p>
+                        {% endif %}
+
+                        <!-- Ingredients -->
+                        {% if menu.ingredients.exists %}
+                        <div class="menu-tags">
+                            {% for ing in menu.ingredients.all %}
+                            <span class="menu-tag">{{ ing.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Rating -->
+                        {% if menu.avg_rating > 0 %}
+                        <div class="menu-stars">
+                            {% for i in "12345" %}
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="{% if forloop.counter <= menu.avg_rating %}#F4B523{% else %}#E0DDD8{% endif %}"><path d="M6 1l1.2 3.6H11L8.1 6.8l1.1 3.6L6 8.5 2.8 10.4l1.1-3.6L1 4.6h3.8z"/></svg>
+                            {% endfor %}
+                            <span class="menu-stars-count">({{ menu.rating_count }})</span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Footer: price then CTA -->
+                        <div class="menu-card-footer">
+                            <div class="menu-price">{{ menu.price|currency_cop }}</div>
+                            {% if not menu.is_sold_out and menu.units_available %}
+                            <div class="menu-units">{{ menu.units_remaining }} disponibles</div>
+                            {% endif %}
+                            {% if not menu.is_sold_out %}
+                            <button class="menu-order-btn"
+                                hx-get="{% url 'store:menu_detail' business.slug menu.pk %}"
+                                hx-target="#modal-content"
+                                hx-swap="innerHTML"
+                                @click="modalOpen = true">
+                                Pedir
+                            </button>
+                            {% else %}
+                            <span class="menu-order-btn menu-order-btn--disabled">Agotado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <div class="store-empty">
+                <div class="store-empty-icon">🍽</div>
+                <div class="store-empty-title">Sin menú hoy</div>
+                <div class="store-empty-sub">Vuelve pronto para ver las opciones del día</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Subscription link -->
+        {% if business.feature_subscriptions %}
+        <div class="store-plans-cta">
+            <div>
+                <div style="font-weight:600;margin-bottom:2px;">Planes de suscripción</div>
+                <div style="font-size:12px;color:var(--text-3);">Accede a precios especiales con un plan mensual</div>
+            </div>
+            <a href="{% url 'store:subscriptions' business.slug %}" class="btn-primary btn-sm">Ver planes</a>
+        </div>
+        {% endif %}
+
+        <!-- ── REVIEWS SECTION ── -->
+        <div class="store-section" id="resenas">
+            <div class="store-section-header">
+                <h2 class="store-section-title">Reseñas</h2>
+                {% if reviews %}<span class="store-section-count">{{ reviews|length }}</span>{% endif %}
+            </div>
+
+            <!-- Write a review form -->
+            {% if user.is_authenticated %}
+            <div class="review-form-card">
+                <div class="review-form-head">
+                    <div class="review-form-avatar">
+                        {% if user.avatar %}<img src="{{ user.avatar.url }}" alt="">{% else %}<span>{{ user.full_name|initials }}</span>{% endif %}
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;color:var(--text-1);">{{ user.full_name|default:"Tú" }}</div>
+                        <div style="font-size:11px;color:var(--text-3);">{% if user_review %}Editar tu reseña{% else %}Escribe una reseña{% endif %}</div>
+                    </div>
+                </div>
+                <form method="post" action="{% url 'store:submit_review' business.slug %}" x-data="reviewForm()">
+                    {% csrf_token %}
+                    <!-- Star picker -->
+                    <div class="review-stars-pick" style="margin-bottom:12px;">
+                        <template x-for="i in [1,2,3,4,5]" :key="i">
+                            <button type="button" @click="rating = i" @mouseover="hover=i" @mouseleave="hover=0"
+                                    style="background:none;border:none;cursor:pointer;padding:2px;">
+                                <svg width="24" height="24" viewBox="0 0 24 24"
+                                     :fill="i <= (hover || rating) ? '#F4B523' : '#E0DDD8'">
+                                    <path d="M12 2l2.6 7.9H23l-6.7 4.9 2.5 7.8L12 18 3.2 22.6l2.5-7.8L-1 9.9h8.4z"/>
+                                </svg>
+                            </button>
+                        </template>
+                        <input type="hidden" name="rating" :value="rating">
+                        <span x-text="labels[rating-1]" style="font-size:12px;color:var(--text-3);margin-left:6px;"></span>
+                    </div>
+                    <textarea name="comment" x-model="comment" rows="3"
+                              placeholder="Cuéntanos tu experiencia…" maxlength="600"
+                              class="review-textarea"
+                              :class="comment.length > 0 ? 'review-textarea--filled' : ''"></textarea>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                        <span style="font-size:11px;color:var(--text-3);" x-text="comment.length + '/600'"></span>
+                        <button type="submit" class="review-submit-btn" :disabled="comment.trim().length < 5">
+                            {% if user_review %}Actualizar{% else %}Publicar{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <script>
+            function reviewForm() {
+                return {
+                    rating: 5,
+                    hover: 0,
+                    comment: "",
+                    labels: ['Malo','Regular','Bien','Muy bien','Excelente'],
+                }
+            }
+            </script>
+
+            {% else %}
+            <div class="review-login-prompt">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6.5" r="3" stroke="var(--green)" stroke-width="1.5" fill="none"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>
+                <span><a href="{% url 'accounts:login' %}?next={{ request.path }}#resenas" style="color:var(--green);font-weight:600;">Inicia sesión</a> para dejar una reseña</span>
+            </div>
+            {% endif %}
+
+            <!-- Reviews list -->
+            {% if reviews %}
+            <div class="reviews-list">
+                {% for r in reviews %}
+                <div class="review-item">
+                    <div class="review-item-head">
+                        <div class="review-item-avatar">
+                            {% if r.user.avatar %}<img src="{{ r.user.avatar.url }}" alt="">{% else %}<span>{{ r.user.full_name|initials }}</span>{% endif %}
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:13px;font-weight:600;color:var(--text-1);">{{ r.user.full_name|default:"Usuario" }}</div>
+                            <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                                <div style="display:flex;gap:2px;">
+                                    {% for i in "12345" %}
+                                    <svg width="11" height="11" viewBox="0 0 12 12" fill="{% if forloop.counter <= r.rating %}#F4B523{% else %}#E0DDD8{% endif %}"><path d="M6 1l1.2 3.6H11L8.1 6.8l1.1 3.6L6 8.5 2.8 10.4l1.1-3.6L1 4.6h3.8z"/></svg>
+                                    {% endfor %}
+                                </div>
+                                <span style="font-size:11px;color:var(--text-3);">{{ r.created_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="review-item-comment">{{ r.comment }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="store-empty" style="padding:32px 24px;">
+                <div class="store-empty-icon">💬</div>
+                <div class="store-empty-title">Sé el primero en opinar</div>
+                <div class="store-empty-sub">Las reseñas ayudan a otros a conocer el negocio</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="store-footer">
+            <span>Powered by</span>
+            <a href="/" style="display:inline-flex;align-items:center;gap:4px;color:var(--green-dark);font-weight:600;text-decoration:none;">
+                <img src="{% static 'img/logo.svg' %}" width="14" height="14" alt="Mesenú"> Mesenú
+            </a>
+        </div>
+    </div>
+
+    <!-- ── ORDER MODAL (bottom sheet) ── -->
+    <div class="modal-backdrop" x-show="modalOpen" x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         @click.self="modalOpen = false" style="display:none;">
+        <div class="modal-sheet" x-show="modalOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="transform translate-y-full"
+             x-transition:enter-end="transform translate-y-0">
+            <div class="modal-handle"></div>
+            <button class="modal-close" @click="modalOpen = false" aria-label="Cerrar">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4l10 10M14 4L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+            <div id="modal-content">
+                <div class="modal-loading">
+                    <div class="modal-loading-spinner"></div>
+                    Cargando…
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

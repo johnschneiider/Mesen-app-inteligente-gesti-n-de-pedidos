@@ -1,0 +1,180 @@
+[
+  {
+    "model": "accounts.user",
+    "pk": 1,
+    "fields": {
+      "phone": "3001234567",
+      "full_name": "Superadmin Mesenú",
+      "role": "superadmin",
+      "is_staff": true,
+      "is_superuser": true,
+      "is_active": true,
+      "password": "pbkdf2_sha256$720000$seed$ChangeThisPasswordOnFirstLogin"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 2,
+    "fields": {
+      "phone": "3100000001",
+      "full_name": "Carlos Ramírez",
+      "role": "business_owner",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "password": "pbkdf2_sha256$720000$seed$ChangeThisPasswordOnFirstLogin"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 3,
+    "fields": {
+      "phone": "3200000002",
+      "full_name": "Laura Gómez",
+      "role": "client",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "password": "pbkdf2_sha256$720000$seed$ChangeThisPasswordOnFirstLogin"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 4,
+    "fields": {
+      "phone": "3200000003",
+      "full_name": "Pedro Torres",
+      "role": "client",
+      "is_staff": false,
+      "is_superuser": false,
+      "is_active": true,
+      "password": "pbkdf2_sha256$720000$seed$ChangeThisPasswordOnFirstLogin"
+    }
+  },
+  {
+    "model": "accounts.business",
+    "pk": 1,
+    "fields": {
+      "owner": 2,
+      "name": "Restaurante El Sol",
+      "slug": "el-sol",
+      "description": "Comida casera colombiana de calidad. Almuerzo ejecutivo todos los días.",
+      "city": "Medellín",
+      "whatsapp": "3100000001",
+      "is_suspended": false,
+      "feature_analytics": true,
+      "feature_subscriptions": true,
+      "feature_delivery": true,
+      "feature_orders": true,
+      "created_at": "2024-01-15T10:00:00Z"
+    }
+  },
+  {
+    "model": "billing.saassubscription",
+    "pk": 1,
+    "fields": {
+      "business": 1,
+      "plan": "professional",
+      "status": "active",
+      "started_at": "2024-01-15T10:00:00Z",
+      "expires_at": "2025-12-31T23:59:59Z"
+    }
+  },
+  {
+    "model": "menus.dailymenu",
+    "pk": 1,
+    "fields": {
+      "business": 1,
+      "title": "Bandeja Paisa Completa",
+      "description": "Frijoles, chicharrón, chorizo, carne molida, huevo frito, arroz, aguacate y arepa.",
+      "price": "18000.00",
+      "units_available": 30,
+      "units_sold": 12,
+      "is_active": true,
+      "valid_from": "2024-01-15",
+      "valid_until": null,
+      "created_at": "2024-01-15T08:00:00Z"
+    }
+  },
+  {
+    "model": "menus.dailymenu",
+    "pk": 2,
+    "fields": {
+      "business": 1,
+      "title": "Sancocho de Gallina",
+      "description": "Sancocho tradicional con gallina criolla, yuca, papa, plátano y arroz.",
+      "price": "15000.00",
+      "units_available": 20,
+      "units_sold": 8,
+      "is_active": true,
+      "valid_from": "2024-01-15",
+      "valid_until": null,
+      "created_at": "2024-01-15T08:00:00Z"
+    }
+  },
+  {
+    "model": "menus.dailymenu",
+    "pk": 3,
+    "fields": {
+      "business": 1,
+      "title": "Cazuela de Mariscos",
+      "description": "Cazuela con camarones, langostinos, calamares en salsa cremosa de coco.",
+      "price": "28000.00",
+      "units_available": 15,
+      "units_sold": 5,
+      "is_active": true,
+      "valid_from": "2024-01-15",
+      "valid_until": null,
+      "created_at": "2024-01-15T08:00:00Z"
+    }
+  },
+  {
+    "model": "orders.order",
+    "pk": 1,
+    "fields": {
+      "business": 1,
+      "client": 3,
+      "menu": 1,
+      "quantity": 2,
+      "unit_price": "18000.00",
+      "total_amount": "36000.00",
+      "status": "delivered",
+      "payment_type": "cash",
+      "order_type": "on_site",
+      "fiado_paid": false,
+      "notes": "",
+      "created_at": "2024-01-15T12:30:00Z"
+    }
+  },
+  {
+    "model": "orders.order",
+    "pk": 2,
+    "fields": {
+      "business": 1,
+      "client": 4,
+      "menu": 2,
+      "quantity": 1,
+      "unit_price": "15000.00",
+      "total_amount": "15000.00",
+      "status": "preparing",
+      "payment_type": "fiado",
+      "order_type": "takeaway",
+      "fiado_paid": false,
+      "notes": "Sin cilantro por favor",
+      "created_at": "2024-01-15T13:00:00Z"
+    }
+  },
+  {
+    "model": "subscriptions.subscriptionplan",
+    "pk": 1,
+    "fields": {
+      "business": 1,
+      "name": "Plan Fiel",
+      "description": "Almuerzo diario con 10% de descuento",
+      "price": "250000.00",
+      "frequency": "monthly",
+      "is_active": true,
+      "created_at": "2024-01-15T10:00:00Z"
+    }
+  }
+]

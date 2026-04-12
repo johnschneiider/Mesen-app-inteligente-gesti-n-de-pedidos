@@ -1,0 +1,106 @@
+{% extends 'base_superadmin.html' %}
+{% load mesenu_tags %}
+
+{% block title %}{{ business.name }} — Superadmin{% endblock %}
+
+{% block superadmin_content %}
+<div class="page-header">
+    <div>
+        <a href="{% url 'superadmin:business_list' %}" style="font-size:12px;color:var(--text-3);text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;">
+            ← Volver a negocios
+        </a>
+        <h1>{{ business.name }}</h1>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">
+            Propietario: {{ business.owner.full_name|default:business.owner.phone }} · {{ business.owner.phone }}
+        </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+        {% if not business.is_suspended %}
+        <form method="post" action="{% url 'superadmin:suspend' business.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-danger" onclick="return confirm('¿Suspender {{ business.name }}?')">
+                Suspender
+            </button>
+        </form>
+        {% else %}
+        <span class="badge badge-cancelado" style="padding:8px 14px;">Suspendido</span>
+        {% endif %}
+    </div>
+</div>
+
+{% if messages %}
+{% for msg in messages %}
+<div class="alert-success" style="margin-bottom:12px;">{{ msg }}</div>
+{% endfor %}
+{% endif %}
+
+<div class="content-grid-2" style="align-items:start;">
+    <!-- Subscription edit -->
+    <div class="card">
+        <div class="section-header" style="margin-bottom:16px;"><h2>Suscripción SaaS</h2></div>
+        <form method="post" action="{% url 'superadmin:edit_subscription' business.pk %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Plan</label>
+                {{ sub_form.plan }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Estado</label>
+                {{ sub_form.status }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Vence el</label>
+                {{ sub_form.expires_at }}
+            </div>
+            <button type="submit" class="btn-primary">Guardar suscripción</button>
+        </form>
+    </div>
+
+    <!-- Features edit -->
+    <div class="card">
+        <div class="section-header" style="margin-bottom:16px;"><h2>Funcionalidades</h2></div>
+        <form method="post" action="{% url 'superadmin:edit_features' business.pk %}">
+            {% csrf_token %}
+            <div style="display:flex;flex-direction:column;gap:14px;">
+                {% for field in features_form %}
+                <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                    <span style="font-size:13px;color:var(--text-1);">{{ field.label }}</span>
+                    <label class="switch">
+                        {{ field }}
+                        <span class="slider"></span>
+                    </label>
+                </label>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top:16px;">Guardar funcionalidades</button>
+        </form>
+    </div>
+</div>
+
+<!-- Recent orders -->
+<div class="card" style="margin-top:20px;">
+    <div class="section-header">
+        <h2>Pedidos recientes</h2>
+        <span style="font-size:12px;color:var(--text-3);">Total: {{ orders.count }}</span>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr><th>#</th><th>Menú</th><th>Cliente</th><th>Monto</th><th>Fecha</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+            {% for order in orders|slice:":15" %}
+            <tr>
+                <td style="font-size:11px;color:var(--text-3);">#{{ order.order_number|stringformat:"s"|slice:":8"|upper }}</td>
+                <td style="font-size:13px;">{{ order.menu.title }}</td>
+                <td style="font-size:12px;">{{ order.client.full_name|default:order.client.phone }}</td>
+                <td style="font-size:13px;font-weight:500;">{{ order.total_amount|currency_cop }}</td>
+                <td style="font-size:11px;color:var(--text-3);">{{ order.created_at|date:"j N H:i" }}</td>
+                <td><span class="badge {{ order.get_status_badge_class }}">{{ order.get_status_display }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-3);">Sin pedidos</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% load mesenu_tags %}
+<div style="text-align:center;padding:20px 0;">
+    <div style="width:48px;height:48px;border-radius:50%;background:#E6F7F1;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5L18 6" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px;">¡Pedido confirmado!</h3>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;">
+        Tu pedido #{{ order.order_number|stringformat:"s"|slice:":8"|upper }} fue recibido.<br>
+        El restaurante lo está preparando.
+    </p>
+    <div style="background:var(--bg-alt);border-radius:8px;padding:12px;text-align:left;margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:4px;">Resumen</div>
+        <div style="font-size:13px;font-weight:500;">{{ order.menu.title }} ×{{ order.quantity }}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--green);margin-top:6px;">{{ order.total_amount|currency_cop }}</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Pago: {{ order.get_payment_type_display }}</div>
+    </div>
+    <button onclick="window.location.reload()" class="btn-primary" style="width:100%;">Ver menú de nuevo</button>
+</div>

@@ -1,0 +1,98 @@
+{% extends 'base_superadmin.html' %}
+{% load mesenu_tags %}
+
+{% block title %}Negocios — Superadmin{% endblock %}
+
+{% block superadmin_content %}
+<div class="page-header">
+    <div>
+        <h1>Negocios</h1>
+        <div class="subtitle">{{ paginator.count }} negocio{{ paginator.count|pluralize:"s" }} registrado{{ paginator.count|pluralize:"s" }}</div>
+    </div>
+    <!-- Search -->
+    <input type="text"
+           placeholder="Buscar por nombre, slug…"
+           hx-get="{% url 'superadmin:business_list' %}"
+           hx-trigger="input changed delay:300ms"
+           hx-target="#biz-table-body"
+           hx-swap="innerHTML"
+           name="q"
+           value="{{ request.GET.q }}"
+           class="form-input" style="width:240px;font-size:13px;">
+</div>
+
+<!-- Filter pills -->
+<div class="filter-pills" style="margin-bottom:16px;">
+    <a href="{% url 'superadmin:business_list' %}" class="filter-pill {% if not request.GET.status %}active{% endif %}">Todos</a>
+    <a href="?status=active" class="filter-pill {% if request.GET.status == 'active' %}active{% endif %}">Activos</a>
+    <a href="?status=trial" class="filter-pill {% if request.GET.status == 'trial' %}active{% endif %}">Trial</a>
+    <a href="?status=suspended" class="filter-pill {% if request.GET.status == 'suspended' %}active{% endif %}">Suspendidos</a>
+    <a href="?status=expired" class="filter-pill {% if request.GET.status == 'expired' %}active{% endif %}">Vencidos</a>
+</div>
+
+<div class="card" style="padding:0;overflow:hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Negocio</th>
+                <th>Propietario</th>
+                <th>Plan</th>
+                <th>Estado sub.</th>
+                <th>Vence</th>
+                <th>Pedidos</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="biz-table-body">
+            {% for biz in page_obj %}
+            <tr>
+                <td>
+                    <div style="font-size:13px;font-weight:600;">{{ biz.name }}</div>
+                    <div style="font-size:10px;color:var(--text-3);">{{ biz.slug }}</div>
+                </td>
+                <td style="font-size:13px;">
+                    {{ biz.owner.full_name|default:biz.owner.phone }}
+                    <div style="font-size:10px;color:var(--text-3);">{{ biz.owner.phone }}</div>
+                </td>
+                <td style="font-size:12px;">
+                    {% if biz.saas_subscription %}
+                    {{ biz.saas_subscription.get_plan_display }}
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if biz.saas_subscription %}
+                    <span class="badge {% if biz.saas_subscription.status == 'active' %}badge-listo{% elif biz.saas_subscription.status == 'trial' %}badge-confirmado{% elif biz.saas_subscription.status == 'suspended' %}badge-cancelado{% else %}badge-pendiente{% endif %}">
+                        {{ biz.saas_subscription.get_status_display }}
+                    </span>
+                    {% else %}<span class="badge badge-pendiente">Sin sub.</span>{% endif %}
+                </td>
+                <td style="font-size:12px;color:var(--text-3);">
+                    {% if biz.saas_subscription.expires_at %}
+                    {{ biz.saas_subscription.expires_at|date:"j N Y" }}
+                    {% if biz.saas_subscription.days_until_expiry <= 7 and biz.saas_subscription.days_until_expiry >= 0 %}
+                    <span style="color:var(--red);font-size:10px;display:block;">⚠ {{ biz.saas_subscription.days_until_expiry }}d</span>
+                    {% endif %}
+                    {% else %}—{% endif %}
+                </td>
+                <td style="font-size:13px;">{{ biz.orders.count }}</td>
+                <td>
+                    <a href="{% url 'superadmin:business_detail' biz.pk %}" style="font-size:12px;color:var(--green);text-decoration:none;">Gestionar →</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">Sin negocios</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-size:12px;color:var(--text-3);">
+    <span>{{ page_obj.start_index }}–{{ page_obj.end_index }} de {{ paginator.count }}</span>
+    <div style="display:flex;gap:6px;">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-ghost" style="padding:5px 10px;font-size:12px;">← Ant.</a>{% endif %}
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-ghost" style="padding:5px 10px;font-size:12px;">Sig. →</a>{% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

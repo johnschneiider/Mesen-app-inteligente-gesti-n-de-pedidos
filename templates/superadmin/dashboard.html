@@ -1,0 +1,92 @@
+{% extends 'base_superadmin.html' %}
+{% load mesenu_tags %}
+
+{% block title %}Panel Superadmin — Mesenú{% endblock %}
+
+{% block superadmin_content %}
+<div class="page-header">
+    <h1>Panel de administración</h1>
+    <div class="subtitle">Vista global de la plataforma</div>
+</div>
+
+<!-- Global stats -->
+<div class="stats-grid" style="margin-bottom:24px;">
+    <div class="card stat-card">
+        <div class="label">Negocios activos</div>
+        <div class="value">{{ stats.active_businesses }}</div>
+        <div class="sub">de {{ stats.total_businesses }} registrados</div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Total clientes</div>
+        <div class="value">{{ stats.total_clients }}</div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Pedidos totales</div>
+        <div class="value">{{ stats.total_orders }}</div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Ingreso SaaS (mes)</div>
+        <div class="value" style="font-size:18px;">{{ stats.saas_revenue_month|currency_cop }}</div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Tickets abiertos</div>
+        <div class="value" style="color:{% if stats.open_tickets > 0 %}var(--amber){% else %}var(--green){% endif %};">{{ stats.open_tickets }}</div>
+    </div>
+    <div class="card stat-card">
+        <div class="label">Vencen en 7 días</div>
+        <div class="value" style="color:{% if stats.expiring_soon > 0 %}var(--red){% else %}var(--text-1){% endif %};">{{ stats.expiring_soon }}</div>
+    </div>
+</div>
+
+<div class="content-grid-2">
+    <!-- Recent businesses -->
+    <div class="card">
+        <div class="section-header">
+            <h2>Negocios recientes</h2>
+            <a href="{% url 'superadmin:business_list' %}" style="font-size:12px;color:var(--green);text-decoration:none;">Ver todos →</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+            {% for biz in recent_businesses %}
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+                <div class="avatar" style="width:30px;height:30px;font-size:10px;background:var(--green);flex-shrink:0;">
+                    {{ biz.name|initials }}
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ biz.name }}</div>
+                    <div style="font-size:10px;color:var(--text-3);">{{ biz.created_at|date:"j N Y" }}</div>
+                </div>
+                <span class="badge {% if biz.saas_subscription.status == 'active' %}badge-listo{% elif biz.saas_subscription.status == 'trial' %}badge-confirmado{% elif biz.saas_subscription.status == 'suspended' %}badge-cancelado{% else %}badge-pendiente{% endif %}">
+                    {{ biz.saas_subscription.get_status_display|default:"—" }}
+                </span>
+                <a href="{% url 'superadmin:business_detail' biz.pk %}" style="font-size:11px;color:var(--green);text-decoration:none;white-space:nowrap;">Ver →</a>
+            </div>
+            {% empty %}
+            <div style="color:var(--text-3);font-size:12px;text-align:center;padding:16px;">Sin negocios</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Open tickets -->
+    <div class="card">
+        <div class="section-header">
+            <h2>Tickets abiertos</h2>
+            <a href="{% url 'superadmin:tickets' %}" style="font-size:12px;color:var(--green);text-decoration:none;">Ver todos →</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+            {% for ticket in open_tickets %}
+            <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                    <div>
+                        <div style="font-size:13px;font-weight:500;">{{ ticket.subject }}</div>
+                        <div style="font-size:11px;color:var(--text-3);">{{ ticket.business.name }} · {{ ticket.created_at|date:"j N H:i" }}</div>
+                    </div>
+                    <a href="{% url 'superadmin:ticket_detail' ticket.pk %}" style="font-size:11px;color:var(--green);text-decoration:none;white-space:nowrap;">Responder →</a>
+                </div>
+            </div>
+            {% empty %}
+            <div style="color:var(--text-3);font-size:12px;text-align:center;padding:16px;">Sin tickets pendientes 👍</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

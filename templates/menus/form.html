@@ -1,0 +1,143 @@
+{% extends 'base_negocio.html' %}
+{% load static %}
+{% load mesenu_tags %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} menú — {{ request.user.business.name }}{% endblock %}
+
+{% block main_content %}
+<div class="page-header">
+    <div>
+        <a href="{% url 'menus:list' %}" style="font-size:12px;color:var(--text-3);text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Volver a menús
+        </a>
+        <h1>{% if form.instance.pk %}Editar menú{% else %}Nuevo menú{% endif %}</h1>
+    </div>
+</div>
+
+{% if messages %}
+{% for msg in messages %}
+<div class="alert-success" style="margin-bottom:14px;">{{ msg }}</div>
+{% endfor %}
+{% endif %}
+
+<!-- ── MAIN FORM: only basic fields, no nested forms ── -->
+<form method="post" enctype="multipart/form-data" id="menu-form">
+    {% csrf_token %}
+    <div class="card" style="margin-bottom:16px;">
+        <div class="section-header" style="margin-bottom:16px;"><h2>Información del menú</h2></div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.title.id_for_label }}">Nombre del plato *</label>
+            {{ form.title }}
+            {% if form.title.errors %}<div class="form-error">{{ form.title.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.description.id_for_label }}">Descripción</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="form-error">{{ form.description.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.price.id_for_label }}">Precio *</label>
+                {{ form.price }}
+                {% if form.price.errors %}<div class="form-error">{{ form.price.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.max_units.id_for_label }}">Unidades disponibles</label>
+                {{ form.max_units }}
+                <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Deja en 50 o ajusta según disponibilidad</div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.valid_from.id_for_label }}">Disponible desde *</label>
+                {{ form.valid_from }}
+                {% if form.valid_from.errors %}<div class="form-error">{{ form.valid_from.errors.0 }}</div>{% endif %}
+                <div style="font-size:11px;color:var(--text-3);margin-top:3px;">El menú aparece en la tienda a partir de esta fecha y hora. Para que sea visible ahora, deja la hora actual.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="{{ form.valid_until.id_for_label }}">Hasta (opcional)</label>
+                {{ form.valid_until }}
+                <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Fecha límite de disponibilidad. Si no se indica, el menú no expira automáticamente.</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                {{ form.is_active }}
+                <span class="form-label" style="margin-bottom:0;">Menú activo (visible en la tienda)</span>
+            </label>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:24px;">
+        <a href="{% url 'menus:list' %}" class="btn-ghost">Cancelar</a>
+        <button type="submit" class="btn-primary">
+            {% if form.instance.pk %}Guardar cambios{% else %}Crear menú{% endif %}
+        </button>
+    </div>
+</form>
+
+<!-- ── HTMX sections (photos + ingredients) — MUST be outside main form ── -->
+{% if menu %}
+<div class="content-grid-2" style="align-items:start;">
+    <!-- Left: Photos -->
+    <div class="card">
+        <div class="section-header" style="margin-bottom:12px;"><h2>Fotos</h2></div>
+        <div id="photos-section">
+            {% include 'menus/partials/photos.html' with menu=menu %}
+        </div>
+        <form hx-post="{% url 'menus:add_photo' menu.pk %}"
+              hx-encoding="multipart/form-data"
+              hx-target="#photos-section"
+              hx-swap="innerHTML"
+              hx-on::after-request="this.reset()"
+              style="margin-top:12px;display:flex;gap:8px;align-items:flex-end;">
+            {% csrf_token %}
+            <div class="form-group" style="flex:1;margin:0;">
+                <label class="form-label">Agregar foto</label>
+                <div class="file-upload file-upload-sm" x-data="fileUpload()" :class="{ 'has-file': fileName }">
+                    <div class="file-upload-icon">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 11l3.5-3.5L7 10l2.5-3L13 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    </div>
+                    <div>
+                        <div class="file-upload-label" x-text="fileName || 'Elegir foto'"></div>
+                        <div class="file-upload-hint">JPG, PNG • máx. 5 MB</div>
+                    </div>
+                    <input type="file" name="image" accept="image/*" required @change="pick($event)">
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" style="padding:8px 16px;white-space:nowrap;">Subir</button>
+        </form>
+    </div>
+
+    <!-- Right: Ingredients -->
+    <div class="card" style="position:sticky;top:72px;">
+        <div class="section-header" style="margin-bottom:0;"><h2>Ingredientes</h2></div>
+        <div id="ingredients-list" style="margin-top:12px;">
+            {% include 'menus/partials/ingredients.html' with menu=menu %}
+        </div>
+        <form hx-post="{% url 'menus:add_ingredient' menu.pk %}"
+              hx-target="#ingredients-list"
+              hx-swap="innerHTML"
+              hx-on::after-request="this.reset()"
+              style="display:flex;gap:6px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;align-items:flex-end;">
+            {% csrf_token %}
+            <div class="form-group" style="flex:1;margin:0;">
+                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Ingrediente</label>
+                <input type="text" name="name" placeholder="Ej: Arroz blanco" required style="width:100%;">
+            </div>
+            <div class="form-group" style="width:80px;margin:0;">
+                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Gramos</label>
+                <input type="number" name="grams" placeholder="g" min="1" style="width:100%;">
+            </div>
+            <button type="submit" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

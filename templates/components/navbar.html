@@ -1,0 +1,69 @@
+{% load static %}
+<nav class="navbar">
+    <!-- Hamburger (mobile only) -->
+    <button class="hamburger" @click="sidebarOpen = !sidebarOpen" aria-label="Abrir menú">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+    </button>
+
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+        <a href="{% url 'orders:dashboard' %}" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+            <img src="{% static 'img/logo.svg' %}" width="30" height="30" alt="Mesenú">
+            <span style="font-size:16px;font-weight:600;color:var(--green-dark);">Mesenú</span>
+        </a>
+        {% if request.user.has_business %}
+        <div class="navbar-breadcrumb" style="display:flex;align-items:center;gap:6px;padding-left:12px;border-left:0.5px solid var(--border);">
+            <span style="font-size:12px;color:var(--text-3);">{{ request.user.business.name }}</span>
+            <span style="color:var(--text-3);">›</span>
+            <span style="font-size:12px;color:var(--text-1);font-weight:500;">{% block breadcrumb %}Inicio{% endblock %}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="navbar-search" style="flex:1;max-width:380px;margin:0 auto;position:relative;">
+        <div class="search-wrap">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);">
+                <circle cx="6" cy="6" r="4" stroke="var(--text-3)" stroke-width="1.4"/>
+                <path d="M9 9l2.5 2.5" stroke="var(--text-3)" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            <input type="search" placeholder="Buscar pedidos, clientes…"
+                   style="width:100%;background:var(--page-bg);padding-left:32px;"
+                   hx-get="{% url 'orders:search' %}"
+                   hx-trigger="keyup changed delay:400ms"
+                   hx-target="#search-results"
+                   name="q">
+        </div>
+        <div id="search-results" style="position:absolute;width:100%;z-index:200;top:calc(100% + 4px);"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        {% if request.user.is_authenticated %}
+        <div style="position:relative;" x-data="{ open: false }">
+            <button @click="open = !open" class="btn-ghost" style="display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;">
+                <div class="avatar" style="width:28px;height:28px;font-size:11px;">
+                    {{ request.user.get_initials }}
+                </div>
+                <span class="navbar-username" style="font-size:12px;font-weight:500;">
+                    {% if request.user.has_business %}{{ request.user.business.name|truncatechars:14 }}{% else %}{{ request.user.full_name|default:request.user.phone|truncatechars:14 }}{% endif %}
+                </span>
+                <svg class="navbar-caret" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 4l3 3 3-3" stroke="var(--text-3)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <div x-show="open" @click.outside="open = false" x-cloak
+                 class="dropdown" style="width:200px;right:0;">
+                <div style="padding:12px 16px;border-bottom:0.5px solid var(--border);">
+                    <div style="font-size:13px;font-weight:500;">{{ request.user.full_name|default:request.user.phone }}</div>
+                    <div style="font-size:11px;color:var(--text-3);">{{ request.user.phone }}</div>
+                </div>
+                <a href="{% url 'accounts:profile' %}" style="display:block;padding:10px 16px;font-size:13px;color:var(--text-1);text-decoration:none;">Mi perfil</a>
+                {% if request.user.has_business %}
+                <a href="{% url 'billing:detail' %}" style="display:block;padding:10px 16px;font-size:13px;color:var(--text-1);text-decoration:none;border-top:0.5px solid var(--border);">Facturación</a>
+                {% endif %}
+                <a href="{% url 'accounts:logout' %}" style="display:block;padding:10px 16px;font-size:13px;color:var(--red);text-decoration:none;border-top:0.5px solid var(--border);">Cerrar sesión</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</nav>

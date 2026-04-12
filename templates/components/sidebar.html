@@ -1,0 +1,105 @@
+{% load static %}
+<aside id="sidebar" class="sidebar" :class="{ open: sidebarOpen }">
+    <!-- Close button (mobile only, controlled by Alpine) -->
+    <button class="hamburger" @click="sidebarOpen = false" aria-label="Cerrar menú"
+            x-show="sidebarOpen"
+            style="margin-bottom:8px;align-self:flex-end;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+    </button>
+    <div style="margin-bottom:20px;">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;">Operación</div>
+        <a href="{% url 'orders:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/><rect x="8" y="1" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/><rect x="1" y="8" width="5" height="5" rx="1.5" fill="currentColor"/><rect x="8" y="8" width="5" height="5" rx="1.5" fill="currentColor" opacity=".6"/></svg>
+            Inicio
+        </a>
+        <a href="{% url 'menus:list' %}" class="nav-item {% if 'menus' in request.resolver_match.app_name %}active{% endif %}">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h10M2 10h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            Menú del día
+        </a>
+        <a href="{% url 'orders:live' %}" class="nav-item {% if request.resolver_match.url_name == 'live' %}active{% endif %}" style="position:relative;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Pedidos en vivo
+            {% if pending_orders_count %}
+            <span style="margin-left:auto;background:var(--green);color:white;border-radius:99px;font-size:10px;font-weight:600;padding:1px 7px;min-width:20px;text-align:center;">{{ pending_orders_count }}</span>
+            {% endif %}
+        </a>
+    </div>
+
+    <div style="margin-bottom:20px;">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;">Negocio</div>
+
+        {% if request.user.business.current_plan_level >= 1 %}
+        <a href="{% url 'analytics:dashboard' %}" class="nav-item {% if 'analytics' in request.resolver_match.app_name %}active{% endif %}">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="7" width="3" height="6" rx="1" fill="currentColor" opacity=".6"/><rect x="6" y="4" width="3" height="9" rx="1" fill="currentColor"/><rect x="11" y="1" width="3" height="12" rx="1" fill="currentColor" opacity=".6"/></svg>
+            Analítica
+        </a>
+        {% else %}
+        <a href="{% url 'billing:detail' %}" class="nav-item nav-item-locked" title="Requiere plan Pro+">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="7" width="3" height="6" rx="1" fill="currentColor" opacity=".35"/><rect x="6" y="4" width="3" height="9" rx="1" fill="currentColor" opacity=".35"/><rect x="11" y="1" width="3" height="12" rx="1" fill="currentColor" opacity=".35"/></svg>
+            Analítica
+            <span class="nav-pro-badge"><svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"><path d="M5 0L6 4L10 5L6 6L5 10L4 6L0 5L4 4Z"/></svg>Pro+</span>
+        </a>
+        {% endif %}
+
+        {% if request.user.business.current_plan_level >= 1 %}
+        <a href="{% url 'subscriptions:list' %}" class="nav-item {% if 'subscriptions' in request.resolver_match.app_name %}active{% endif %}">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5L8.6 5.1l3.9.6-2.8 2.7.7 3.8L7 10.3l-3.4 1.9.7-3.8L1.5 5.7l3.9-.6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="none"/></svg>
+            Suscripciones
+        </a>
+        {% else %}
+        <a href="{% url 'billing:detail' %}" class="nav-item nav-item-locked" title="Requiere plan Pro+">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5L8.6 5.1l3.9.6-2.8 2.7.7 3.8L7 10.3l-3.4 1.9.7-3.8L1.5 5.7l3.9-.6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="none" opacity=".35"/></svg>
+            Suscripciones
+            <span class="nav-pro-badge"><svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"><path d="M5 0L6 4L10 5L6 6L5 10L4 6L0 5L4 4Z"/></svg>Pro+</span>
+        </a>
+        {% endif %}
+
+        {% if request.user.business.current_plan_level >= 1 %}
+        <a href="{% url 'orders:clients' %}" class="nav-item {% if request.resolver_match.url_name == 'clients' %}active{% endif %}">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M1 12c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/><circle cx="10" cy="4.5" r="2" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".5"/><path d="M11.5 11.5c.3-.9.4-1.8.2-2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".5"/></svg>
+            Clientes
+        </a>
+        {% else %}
+        <a href="{% url 'billing:detail' %}" class="nav-item nav-item-locked" title="Requiere plan Pro+">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".35"/><path d="M1 12c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" opacity=".35"/><circle cx="10" cy="4.5" r="2" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".2"/></svg>
+            Clientes
+            <span class="nav-pro-badge"><svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"><path d="M5 0L6 4L10 5L6 6L5 10L4 6L0 5L4 4Z"/></svg>Pro+</span>
+        </a>
+        {% endif %}
+    </div>
+
+    <div style="margin-bottom:20px;">
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);padding:0 10px;margin-bottom:6px;">Soporte</div>
+        <a href="{% url 'support:list' %}" class="nav-item {% if 'support' in request.resolver_match.app_name %}active{% endif %}">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h10a1 1 0 011 1v6a1 1 0 01-1 1H2a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M4 6h6M4 8.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Soporte
+        </a>
+        <a href="{% url 'accounts:profile' %}" class="nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M2.5 12c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg>
+            Configuración
+        </a>
+    </div>
+
+    <div style="flex:1;"></div>
+
+    {% with sub=request.user.business.saas_subscription %}
+    {% if sub %}
+    <div class="plan-card-sidebar">
+        <div style="font-size:11px;font-weight:600;color:var(--green-dark);margin-bottom:2px;">Plan {{ sub.get_plan_display }}</div>
+        <div style="font-size:10px;color:#0F6E56;margin-bottom:10px;">
+            {% if sub.days_until_expiry > 0 %}
+            Vence en {{ sub.days_until_expiry }} días
+            {% else %}
+            Vencida
+            {% endif %}
+        </div>
+        <div style="height:4px;background:rgba(29,158,117,0.2);border-radius:99px;margin-bottom:10px;">
+            <div style="height:100%;background:var(--green);border-radius:99px;width:{% if sub.days_until_expiry > 0 %}{{ sub.days_until_expiry|floatformat:0 }}{% else %}0{% endif %}%;max-width:100%;"></div>
+        </div>
+        <a href="{% url 'billing:detail' %}" class="btn-ghost" style="font-size:11px;width:100%;text-align:center;display:block;text-decoration:none;padding:6px;">Gestionar plan</a>
+    </div>
+    {% endif %}
+    {% endwith %}
+</aside>

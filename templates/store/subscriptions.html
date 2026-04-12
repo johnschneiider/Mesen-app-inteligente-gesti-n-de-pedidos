@@ -1,0 +1,65 @@
+{% extends 'base_public.html' %}
+{% load mesenu_tags %}
+
+{% block title %}Planes de {{ business.name }} — Mesenú{% endblock %}
+
+{% block content %}
+<div class="store-layout" style="max-width:700px;margin:0 auto;padding:24px 16px 48px;">
+    <div style="text-align:center;margin-bottom:32px;">
+        <a href="{% url 'store:store' business.slug %}" style="font-size:12px;color:var(--text-3);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-bottom:12px;">
+            ← Volver a la tienda
+        </a>
+        {% if business.logo %}
+        <img src="{{ business.logo.url }}" alt="{{ business.name }}"
+             style="width:56px;height:56px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 12px;">
+        {% endif %}
+        <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;">Planes de suscripción</h1>
+        <p style="font-size:13px;color:var(--text-2);">Suscríbete y ahorra en cada pedido de {{ business.name }}</p>
+    </div>
+
+    <div class="plans-section">
+        {% for plan in plans %}
+        <div class="plan-card" style="background:white;border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                <div>
+                    <div style="font-size:17px;font-weight:700;">{{ plan.name }}</div>
+                    {% if plan.description %}<div style="font-size:12px;color:var(--text-3);margin-top:2px;">{{ plan.description }}</div>{% endif %}
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:20px;font-weight:700;color:var(--green);">{{ plan.price|currency_cop }}</div>
+                    <div style="font-size:10px;color:var(--text-3);">/ {{ plan.get_frequency_display }}</div>
+                </div>
+            </div>
+
+            {% if plan.benefits.exists %}
+            <ul style="list-style:none;padding:0;margin:0 0 16px;display:flex;flex-direction:column;gap:6px;">
+                {% for benefit in plan.benefits.all %}
+                <li style="display:flex;align-items:center;gap:6px;font-size:13px;">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" fill="#1D9E75"/><path d="M4 6.5l2 2 3-3" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    {{ benefit.description }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+                {% if user_subscription and user_subscription.plan == plan and user_subscription.status == 'active' %}
+                <div class="badge badge-listo" style="display:inline-block;padding:6px 16px;">Plan activo ✓</div>
+                {% else %}
+                <form hx-post="{% url 'store:subscribe' business.slug plan.pk %}"
+                      hx-target="closest .plan-card"
+                      hx-swap="innerHTML">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-primary" style="width:100%;">Suscribirse</button>
+                </form>
+                {% endif %}
+            {% else %}
+            <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn-primary" style="display:block;text-align:center;width:100%;">Inicia sesión para suscribirse</a>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div style="text-align:center;padding:40px;color:var(--text-3);">Este restaurante no tiene planes disponibles aún.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
