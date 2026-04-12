@@ -24,13 +24,20 @@
         </div>
 
         <div style="display:flex;flex-direction:column;gap:10px;">
-            <a href="{% url 'support:list' %}" class="btn-primary" style="display:block;text-align:center;">
-                Contactar soporte para renovar
+            <a href="https://checkout.bold.co/payment/LNK_QLI9IARZ9H"
+               target="_blank" rel="noopener noreferrer"
+               class="btn-primary"
+               style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="3" width="13" height="9" rx="2" stroke="white" stroke-width="1.3"/><path d="M1 6h13" stroke="white" stroke-width="1.3"/><path d="M4 9.5h3" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg>
+                Pagar con Bold y renovar
             </a>
+            <div style="font-size:11px;color:var(--text-3);text-align:center;">
+                Después de pagar, <a href="{% url 'support:list' %}" style="color:var(--blue);">abre un ticket con el comprobante</a> para activar tu plan.
+            </div>
             <a href="{% url 'billing:detail' %}" class="btn-ghost" style="display:block;text-align:center;">
                 Ver detalle de suscripción
             </a>
-            <a href="{% url 'accounts:logout' %}" style="font-size:12px;color:var(--text-3);text-decoration:none;margin-top:4px;display:block;">
+            <a href="{% url 'accounts:logout' %}" style="font-size:12px;color:var(--text-3);text-decoration:none;margin-top:4px;display:block;text-align:center;">
                 Cerrar sesión
             </a>
         </div>

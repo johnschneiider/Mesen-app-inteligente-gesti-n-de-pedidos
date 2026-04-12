@@ -5,6 +5,15 @@
 {% block title %}{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} menú — {{ request.user.business.name }}{% endblock %}
 
 {% block main_content %}
+<style>
+.toggle-switch { position:relative; display:inline-block; width:48px; height:26px; flex-shrink:0; }
+.toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-slider { position:absolute; cursor:pointer; inset:0; background:var(--border); border-radius:26px; transition:.25s; }
+.toggle-slider::before { content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:white; border-radius:50%; transition:.25s; box-shadow:0 1px 4px rgba(0,0,0,.18); }
+input:checked + .toggle-slider { background:var(--green); }
+input:checked + .toggle-slider::before { transform:translateX(22px); }
+</style>
+
 <div class="page-header">
     <div>
         <a href="{% url 'menus:list' %}" style="font-size:12px;color:var(--text-3);text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:6px;">
@@ -21,9 +30,11 @@
 {% endfor %}
 {% endif %}
 
-<!-- ── MAIN FORM: only basic fields, no nested forms ── -->
+<!-- ── MAIN FORM ── -->
 <form method="post" enctype="multipart/form-data" id="menu-form">
     {% csrf_token %}
+
+    <!-- Información básica -->
     <div class="card" style="margin-bottom:16px;">
         <div class="section-header" style="margin-bottom:16px;"><h2>Información del menú</h2></div>
 
@@ -57,87 +68,118 @@
                 <label class="form-label" for="{{ form.valid_from.id_for_label }}">Disponible desde *</label>
                 {{ form.valid_from }}
                 {% if form.valid_from.errors %}<div class="form-error">{{ form.valid_from.errors.0 }}</div>{% endif %}
-                <div style="font-size:11px;color:var(--text-3);margin-top:3px;">El menú aparece en la tienda a partir de esta fecha y hora. Para que sea visible ahora, deja la hora actual.</div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Para que sea visible ahora, deja la hora actual.</div>
             </div>
             <div class="form-group">
                 <label class="form-label" for="{{ form.valid_until.id_for_label }}">Hasta (opcional)</label>
                 {{ form.valid_until }}
-                <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Fecha límite de disponibilidad. Si no se indica, el menú no expira automáticamente.</div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Si no se indica, el menú no expira automáticamente.</div>
             </div>
         </div>
 
-        <div class="form-group">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <!-- Toggle activo -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-alt);border-radius:var(--radius);border:1px solid var(--border);margin-top:4px;">
+            <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-1);">Menú activo</div>
+                <div style="font-size:11px;color:var(--text-3);margin-top:2px;">Cuando está activo, es visible en tu tienda pública</div>
+            </div>
+            <label class="toggle-switch">
                 {{ form.is_active }}
-                <span class="form-label" style="margin-bottom:0;">Menú activo (visible en la tienda)</span>
+                <span class="toggle-slider"></span>
             </label>
         </div>
     </div>
 
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:24px;">
-        <a href="{% url 'menus:list' %}" class="btn-ghost">Cancelar</a>
-        <button type="submit" class="btn-primary">
-            {% if form.instance.pk %}Guardar cambios{% else %}Crear menú{% endif %}
-        </button>
+    <!-- Foto (solo en creación — en edición se maneja con HTMX abajo) -->
+    {% if not form.instance.pk %}
+    <div class="card" style="margin-bottom:16px;">
+        <div class="section-header" style="margin-bottom:12px;"><h2>Foto del plato</h2></div>
+        <div class="file-upload" x-data="fileUpload()" :class="{ 'has-file': fileName }">
+            <div class="file-upload-icon">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="6" r="2.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 13l4.5-4.5L8 11l3-3.5L15 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            </div>
+            <div>
+                <div class="file-upload-label" x-text="fileName || 'Elegir foto del plato'"></div>
+                <div class="file-upload-hint">JPG, PNG · máx. 5 MB</div>
+            </div>
+            <img class="file-upload-preview" :src="previewUrl" alt="preview">
+            <input type="file" name="photo" accept="image/*" @change="pick($event)">
+        </div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:8px;">Podrás agregar más fotos después de guardar el menú.</div>
     </div>
+
+    <!-- Ingredientes placeholder (solo en creación) -->
+    <div class="card" style="margin-bottom:16px;">
+        <div class="section-header" style="margin-bottom:0;"><h2>Ingredientes</h2></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:14px;background:var(--bg-alt);border-radius:var(--radius);border:1px solid var(--border);">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:var(--text-3);"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v4M8 10.5v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span style="font-size:12px;color:var(--text-3);">Guarda el menú primero para agregar ingredientes.</span>
+        </div>
+    </div>
+    {% endif %}
+
 </form>
 
-<!-- ── HTMX sections (photos + ingredients) — MUST be outside main form ── -->
+<!-- ── HTMX sections (fotos + ingredientes) solo en edición, fuera del form ── -->
 {% if menu %}
-<div class="content-grid-2" style="align-items:start;">
-    <!-- Left: Photos -->
-    <div class="card">
-        <div class="section-header" style="margin-bottom:12px;"><h2>Fotos</h2></div>
-        <div id="photos-section">
-            {% include 'menus/partials/photos.html' with menu=menu %}
-        </div>
-        <form hx-post="{% url 'menus:add_photo' menu.pk %}"
-              hx-encoding="multipart/form-data"
-              hx-target="#photos-section"
-              hx-swap="innerHTML"
-              hx-on::after-request="this.reset()"
-              style="margin-top:12px;display:flex;gap:8px;align-items:flex-end;">
-            {% csrf_token %}
-            <div class="form-group" style="flex:1;margin:0;">
-                <label class="form-label">Agregar foto</label>
-                <div class="file-upload file-upload-sm" x-data="fileUpload()" :class="{ 'has-file': fileName }">
-                    <div class="file-upload-icon">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 11l3.5-3.5L7 10l2.5-3L13 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-                    </div>
-                    <div>
-                        <div class="file-upload-label" x-text="fileName || 'Elegir foto'"></div>
-                        <div class="file-upload-hint">JPG, PNG • máx. 5 MB</div>
-                    </div>
-                    <input type="file" name="image" accept="image/*" required @change="pick($event)">
+<div class="card" style="margin-bottom:16px;">
+    <div class="section-header" style="margin-bottom:12px;"><h2>Fotos del plato</h2></div>
+    <div id="photos-section">
+        {% include 'menus/partials/photos.html' with menu=menu %}
+    </div>
+    <form hx-post="{% url 'menus:add_photo' menu.pk %}"
+          hx-encoding="multipart/form-data"
+          hx-target="#photos-section"
+          hx-swap="innerHTML"
+          hx-on::after-request="this.reset()"
+          style="margin-top:12px;display:flex;gap:8px;align-items:flex-end;">
+        {% csrf_token %}
+        <div class="form-group" style="flex:1;margin:0;">
+            <label class="form-label">Agregar foto</label>
+            <div class="file-upload file-upload-sm" x-data="fileUpload()" :class="{ 'has-file': fileName }">
+                <div class="file-upload-icon">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M1 11l3.5-3.5L7 10l2.5-3L13 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 </div>
+                <div>
+                    <div class="file-upload-label" x-text="fileName || 'Elegir foto'"></div>
+                    <div class="file-upload-hint">JPG, PNG · máx. 5 MB</div>
+                </div>
+                <input type="file" name="image" accept="image/*" required @change="pick($event)">
             </div>
-            <button type="submit" class="btn-primary" style="padding:8px 16px;white-space:nowrap;">Subir</button>
-        </form>
-    </div>
-
-    <!-- Right: Ingredients -->
-    <div class="card" style="position:sticky;top:72px;">
-        <div class="section-header" style="margin-bottom:0;"><h2>Ingredientes</h2></div>
-        <div id="ingredients-list" style="margin-top:12px;">
-            {% include 'menus/partials/ingredients.html' with menu=menu %}
         </div>
-        <form hx-post="{% url 'menus:add_ingredient' menu.pk %}"
-              hx-target="#ingredients-list"
-              hx-swap="innerHTML"
-              hx-on::after-request="this.reset()"
-              style="display:flex;gap:6px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;align-items:flex-end;">
-            {% csrf_token %}
-            <div class="form-group" style="flex:1;margin:0;">
-                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Ingrediente</label>
-                <input type="text" name="name" placeholder="Ej: Arroz blanco" required style="width:100%;">
-            </div>
-            <div class="form-group" style="width:80px;margin:0;">
-                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Gramos</label>
-                <input type="number" name="grams" placeholder="g" min="1" style="width:100%;">
-            </div>
-            <button type="submit" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
-        </form>
+        <button type="submit" class="btn-primary" style="padding:8px 16px;white-space:nowrap;">Subir</button>
+    </form>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+    <div class="section-header" style="margin-bottom:0;"><h2>Ingredientes</h2></div>
+    <div id="ingredients-list" style="margin-top:12px;">
+        {% include 'menus/partials/ingredients.html' with menu=menu %}
     </div>
+    <form hx-post="{% url 'menus:add_ingredient' menu.pk %}"
+          hx-target="#ingredients-list"
+          hx-swap="innerHTML"
+          hx-on::after-request="this.reset()"
+          style="display:flex;gap:6px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;align-items:flex-end;">
+        {% csrf_token %}
+        <div class="form-group" style="flex:1;margin:0;">
+            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Ingrediente</label>
+            <input type="text" name="name" placeholder="Ej: Arroz blanco" required style="width:100%;">
+        </div>
+        <div class="form-group" style="width:80px;margin:0;">
+            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Gramos</label>
+            <input type="number" name="grams" placeholder="g" min="1" style="width:100%;">
+        </div>
+        <button type="submit" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
+    </form>
 </div>
 {% endif %}
+
+<!-- ── Botón guardar al final (asociado al form via atributo form=) ── -->
+<div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:32px;">
+    <a href="{% url 'menus:list' %}" class="btn-ghost">Cancelar</a>
+    <button type="submit" form="menu-form" class="btn-primary">
+        {% if form.instance.pk %}Guardar cambios{% else %}Crear menú{% endif %}
+    </button>
+</div>
 {% endblock %}
