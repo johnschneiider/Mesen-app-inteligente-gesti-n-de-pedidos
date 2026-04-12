@@ -2,7 +2,7 @@ from .base import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='mesenu.com,www.mesenu.com').split(',')
 
 CHANNEL_LAYERS = {
     'default': {
