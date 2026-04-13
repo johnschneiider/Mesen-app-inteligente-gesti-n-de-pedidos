@@ -4,3 +4,6 @@ daphne>=4.0
 pillow>=10.0
 django-htmx>=1.17
 python-decouple>=3.8
+gunicorn
+psycopg2-binary>=2.9
+whitenoise>=6.7
