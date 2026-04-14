@@ -17,7 +17,7 @@
     flex: 1; display: flex; align-items: center; justify-content: center;
     padding: 60px 40px; background: var(--page-bg);
 }
-.hero-content { max-width: 580px; text-align: center; }
+.hero-content { width: 100%; max-width: 580px; text-align: center; }
 .hero-badge {
     display: inline-block;
     background: var(--green-light); color: var(--green-dark);
@@ -34,7 +34,7 @@
 .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .features-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-    max-width: 800px; margin: 48px auto 0;
+    width: 100%; max-width: 800px; margin: 48px auto 0;
 }
 .feature-card {
     background: var(--white); border: 0.5px solid var(--border);
@@ -57,6 +57,7 @@
     .hero-nav-actions .btn-primary { font-size: 12px; padding: 7px 14px; }
 
     .hero-body { padding: 36px 20px 48px; align-items: flex-start; }
+    .hero-wrapper { align-items: flex-start; }
     .hero-content { text-align: left; max-width: 100%; }
 
     .hero-badge { font-size: 10px; padding: 4px 12px; }
@@ -76,6 +77,69 @@
     .hero-body { padding: 48px 24px; }
     .features-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ─── Hero wrapper (centra contenido en desktop) ─── */
+.hero-wrapper {
+    width: 100%;
+    max-width: 860px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ─── Benefits section ─── */
+.benefits-section {
+    background: var(--white);
+    border-top: 0.5px solid var(--border);
+    padding: 80px 40px;
+}
+.benefits-container {
+    max-width: 860px;
+    margin: 0 auto;
+    text-align: center;
+}
+.benefits-heading {
+    font-size: 28px; font-weight: 600; letter-spacing: -0.5px;
+    color: var(--text-1); margin-bottom: 10px;
+}
+.benefits-sub {
+    font-size: 15px; color: var(--text-3); margin-bottom: 48px; line-height: 1.7;
+}
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    text-align: left;
+}
+.benefit-item {
+    background: var(--page-bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px 20px;
+}
+.benefit-icon {
+    width: 40px; height: 40px;
+    background: var(--green-light);
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+}
+.benefit-title {
+    font-size: 14px; font-weight: 600; color: var(--text-1); margin-bottom: 6px;
+}
+.benefit-desc {
+    font-size: 12px; color: var(--text-3); line-height: 1.6;
+}
+@media (max-width: 768px) {
+    .benefits-section { padding: 48px 20px; }
+    .benefits-grid { grid-template-columns: 1fr; gap: 12px; }
+    .benefits-heading { font-size: 22px; text-align: left; }
+    .benefits-sub { margin-bottom: 28px; font-size: 14px; text-align: left; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+    .benefits-grid { grid-template-columns: repeat(2, 1fr); }
+    .benefits-section { padding: 60px 24px; }
+}
 </style>
 
 <div class="hero">
@@ -91,7 +155,7 @@
     </nav>
 
     <div class="hero-body">
-        <div>
+        <div class="hero-wrapper">
             <div class="hero-content">
                 <div class="hero-badge">Plataforma SaaS para restaurantes</div>
                 <h1 class="hero-title">Tu restaurante, digital<br><span>sin intermediarios</span></h1>
@@ -132,8 +196,86 @@
                         <div class="feature-desc">Tu menú en línea en /tienda/mi-restaurante/ sin comisiones.</div>
                     </div>
                 </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="4" width="14" height="10" rx="1.5" stroke="var(--green)" stroke-width="1.8" fill="none"/><path d="M5 8h8M5 11h5" stroke="var(--green)" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="feature-title">Menú del día digital</div>
+                        <div class="feature-desc">Publica y actualiza tu oferta diaria en segundos. Tus clientes la ven al instante.</div>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><polyline points="2,13 6,8 9,11 12,6 16,9" stroke="var(--green)" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="feature-title">Analíticas de ventas</div>
+                        <div class="feature-desc">Conoce tus platos estrella, ingresos por día y el comportamiento de tus clientes.</div>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="10" r="5" stroke="var(--green)" stroke-width="1.8" fill="none"/><path d="M9 7v3l2 1" stroke="var(--green)" stroke-width="1.6" stroke-linecap="round"/><path d="M6 3h6" stroke="var(--green)" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    </div>
+                    <div>
+                        <div class="feature-title">0% comisión por pedido</div>
+                        <div class="feature-desc">Paga solo la suscripción mensual. Cada peso que vendes es tuyo, sin repartir.</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<section class="benefits-section">
+    <div class="benefits-container">
+        <h2 class="benefits-heading">Vende más. Paga menos. Controla todo.</h2>
+        <p class="benefits-sub">Mesenú reemplaza el papel, el Excel y el WhatsApp de tu restaurante<br>con una sola plataforma pensada para negocios colombianos.</p>
+        <div class="benefits-grid">
+            <div class="benefit-item">
+                <div class="benefit-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M7 6h4.5a2.5 2.5 0 010 5H7m0 0h5a2.5 2.5 0 010 5H7" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </div>
+                <div class="benefit-title">Elimina intermediarios costosos</div>
+                <div class="benefit-desc">Las apps de delivery cobran hasta el 30% de cada pedido. Con Mesenú pagas solo la suscripción y te quedas con el 100% de cada venta.</div>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 16l4-4 3 3 5-7" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="benefit-title">Fideliza clientes corporativos</div>
+                <div class="benefit-desc">Ofrece crédito a empresas del sector. Ellos piden, acumulan y pagan al cierre del mes. Tú aseguras ingresos recurrentes sin perseguir cobros.</div>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="var(--green)" stroke-width="1.8" fill="none"/><path d="M10 6v5l3 3" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </div>
+                <div class="benefit-title">Ahorra tiempo en operación</div>
+                <div class="benefit-desc">Los pedidos llegan directo a cocina en tiempo real. Menos errores, menos papel, menos llamadas. Tu equipo se enfoca en cocinar, no en anotar.</div>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="11" rx="1.5" stroke="var(--green)" stroke-width="1.8" fill="none"/><path d="M3 9h14" stroke="var(--green)" stroke-width="1.8"/><path d="M7 3v4M13 3v4" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </div>
+                <div class="benefit-title">Tu marca, no la de otro</div>
+                <div class="benefit-desc">Tu tienda en tu propia URL dentro de Mesenú. Tus clientes te reconocen a ti, no a una plataforma genérica de terceros.</div>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 15V7l7-4 7 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1z" stroke="var(--green)" stroke-width="1.8" fill="none"/><path d="M7 15v-5h6v5" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="benefit-title">Decisiones con datos reales</div>
+                <div class="benefit-desc">Descubre qué platos generan más ingresos, en qué horario vendes más y cómo crece tu negocio semana a semana. Sin hojas de cálculo.</div>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7z" stroke="var(--green)" stroke-width="1.8" fill="none"/><path d="M7.5 10l2 2 3-3" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="benefit-title">Listo en minutos, no semanas</div>
+                <div class="benefit-desc">Crea tu cuenta, carga tu menú y empieza a recibir pedidos el mismo día. Sin técnicos, sin instalaciones, sin complicaciones.</div>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}
