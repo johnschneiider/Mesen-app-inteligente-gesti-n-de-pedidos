@@ -56,12 +56,14 @@ class SaaSSubscription(models.Model):
     def update_status(self):
         days = self.days_until_expiry()
         if days < 0:
-            self.status = 'expired'
+            new_status = 'expired'
         elif days <= 7:
-            self.status = 'expiring_soon'
+            new_status = 'expiring_soon'
         else:
-            self.status = 'active'
-        self.save(update_fields=['status'])
+            new_status = 'active'
+        if new_status != self.status:
+            self.status = new_status
+            self.save(update_fields=['status'])
 
 
 class PaymentRecord(models.Model):

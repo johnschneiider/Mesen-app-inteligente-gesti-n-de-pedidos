@@ -12,14 +12,21 @@ class SubscriptionCheckMiddleware:
         if (
             request.user.is_authenticated
             and request.user.is_business_owner
-            and request.user.has_business
             and not any(request.path.startswith(p) for p in self.EXEMPT_PATHS)
         ):
-            sub = getattr(request.user.business, 'saas_subscription', None)
-            if sub:
-                sub.update_status()
-                if sub.status in ['expired', 'suspended']:
-                    from django.shortcuts import redirect
-                    return redirect('billing:expired')
+            # Carga negocio + suscripción en una sola query con select_related
+            from apps.accounts.models import Business
+            try:
+                business = Business.objects.select_related('saas_subscription').get(owner=request.user)
+                # Cacheamos en el objeto user para que el resto del request no re-query
+                request.user.__dict__['business'] = business
+                sub = getattr(business, 'saas_subscription', None)
+                if sub:
+                    sub.update_status()
+                    if sub.status in ['expired', 'suspended']:
+                        from django.shortcuts import redirect
+                        return redirect('billing:expired')
+            except Business.DoesNotExist:
+                pass
 
         return self.get_response(request)
