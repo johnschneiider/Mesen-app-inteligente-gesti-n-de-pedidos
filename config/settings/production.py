@@ -26,6 +26,8 @@ CACHES = {
         'LOCATION': _REDIS_URL,
         'OPTIONS': {
             'db': '1',  # use DB 1 so channels (DB 0) stays separate
+            'socket_connect_timeout': 2,   # fail fast if Redis is unreachable
+            'socket_timeout': 2,
         },
         'TIMEOUT': 300,
     }

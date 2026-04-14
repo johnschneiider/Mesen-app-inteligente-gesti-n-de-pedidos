@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect
 from django.views import View
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 
 
+@method_decorator(cache_page(60 * 60), name='dispatch')  # 1 hora en cache (solo usuarios anónimos)
 class HomeView(View):
     def get(self, request):
         if request.user.is_authenticated:
