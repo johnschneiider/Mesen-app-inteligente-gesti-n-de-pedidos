@@ -1,18 +1,11 @@
-{% extends 'base.html' %}
+{% extends 'base_public.html' %}
 {% load static %}
 
 {% block title %}Mesenú — Gestión para restaurantes colombianos{% endblock %}
 
-{% block content %}
+{% block store_content %}
 <style>
 .hero { min-height: 100vh; display: flex; flex-direction: column; }
-.hero-nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 40px; height: var(--nav-h);
-    background: var(--white); border-bottom: 0.5px solid var(--border);
-    position: sticky; top: 0; z-index: 100;
-}
-.hero-nav-actions { display: flex; gap: 10px; align-items: center; }
 .hero-body {
     flex: 1; display: flex; align-items: center; justify-content: center;
     padding: 60px 40px; background: var(--page-bg);
@@ -51,11 +44,6 @@
 
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
-    .hero-nav { padding: 0 16px; }
-    .hero-nav-logo-text { display: none; }
-    .hero-nav-actions .btn-ghost { font-size: 12px; padding: 6px 10px; }
-    .hero-nav-actions .btn-primary { font-size: 12px; padding: 7px 14px; }
-
     .hero-body { padding: 36px 20px 48px; align-items: flex-start; }
     .hero-wrapper { align-items: flex-start; }
     .hero-content { text-align: left; max-width: 100%; }
@@ -73,7 +61,6 @@
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-    .hero-nav { padding: 0 24px; }
     .hero-body { padding: 48px 24px; }
     .features-grid { grid-template-columns: repeat(3, 1fr); }
 }
@@ -143,17 +130,6 @@
 </style>
 
 <div class="hero">
-    <nav class="hero-nav">
-        <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;">
-            <img src="{% static 'img/logo.svg' %}" width="30" height="30" alt="Mesenú">
-            <span class="hero-nav-logo-text" style="font-size:16px;font-weight:600;color:var(--green-dark);">Mesenú</span>
-        </a>
-        <div class="hero-nav-actions">
-            <a href="{% url 'accounts:login' %}" class="btn-ghost hero-nav-login">Iniciar sesión</a>
-            <a href="{% url 'accounts:register' %}" class="btn-primary">Comenzar gratis</a>
-        </div>
-    </nav>
-
     <div class="hero-body">
         <div class="hero-wrapper">
             <div class="hero-content">

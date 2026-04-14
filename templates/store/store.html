@@ -386,12 +386,17 @@
         </div>
 
         <!-- Footer -->
-        <div class="store-footer">
-            <span>Powered by</span>
-            <a href="/" style="display:inline-flex;align-items:center;gap:4px;color:var(--green-dark);font-weight:600;text-decoration:none;">
-                <img src="{% static 'img/logo.svg' %}" width="14" height="14" alt="Mesenú"> Mesenú
-            </a>
-        </div>
+        <footer class="public-footer">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <img src="{% static 'img/logo.svg' %}" width="18" height="18" alt="Mesenú">
+                <span style="font-weight:500;color:var(--text-2);">Mesenú</span>
+                <span>© 2026</span>
+            </div>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;">
+                <a href="tel:3117451274">📞 311 745 1274</a>
+                <a href="mailto:johnsneiider@gmail.com">✉ johnsneiider@gmail.com</a>
+            </div>
+        </footer>
     </div>
 
     <!-- ── ORDER MODAL (bottom sheet) ── -->

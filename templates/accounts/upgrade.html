@@ -1,17 +1,13 @@
-{% extends 'base.html' %}
+{% extends 'base_public.html' %}
+{% load static %}
 {% block title %}Crear mi negocio — Mesenú{% endblock %}
-{% block content %}
+{% block store_content %}
 <style>
 .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--page-bg); padding: 40px 16px; }
 .upgrade-card { background: var(--white); border: 0.5px solid var(--border); border-radius: var(--radius-xl); padding: 36px 32px; width: 100%; max-width: 520px; }
 </style>
-{% load static %}
 <div class="auth-wrap">
     <div class="upgrade-card">
-        <a href="/" style="display:flex;align-items:center;gap:8px;margin-bottom:28px;text-decoration:none;">
-            <img src="{% static 'img/logo.svg' %}" width="30" height="30" alt="Logo">
-            <span style="font-size:16px;font-weight:600;color:var(--green-dark);">Mesenú</span>
-        </a>
         <h1 style="margin-bottom:6px;">Crea tu restaurante</h1>
         <p style="color:var(--text-3);font-size:13px;margin-bottom:24px;">Empieza con 30 días gratis en el Plan Starter</p>
 
