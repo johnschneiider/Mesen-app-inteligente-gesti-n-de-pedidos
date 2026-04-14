@@ -10,7 +10,9 @@ class BusinessOwnerRequiredMixin(LoginRequiredMixin):
             return redirect('accounts:login')
         if not request.user.is_business_owner or not request.user.has_business:
             return redirect('accounts:upgrade_to_business')
-        if request.user.business.is_suspended:
+        # business already loaded by SubscriptionCheckMiddleware → no extra query
+        business = request.user.__dict__.get('business') or request.user.business
+        if business.is_suspended:
             return render(request, 'core/business_suspended.html')
         return super().dispatch(request, *args, **kwargs)
 
@@ -25,9 +27,10 @@ class PlanRequiredMixin(BusinessOwnerRequiredMixin):
             return redirect('accounts:login')
         if not request.user.is_business_owner or not request.user.has_business:
             return redirect('accounts:upgrade_to_business')
-        if request.user.business.is_suspended:
+        business = request.user.__dict__.get('business') or request.user.business
+        if business.is_suspended:
             return render(request, 'core/business_suspended.html')
-        if request.user.business.current_plan_level < self.min_plan_level:
+        if business.current_plan_level < self.min_plan_level:
             plan_name = 'Pro+' if self.min_plan_level == 1 else 'Enterprise'
             return render(request, 'core/feature_disabled.html', {
                 'plan_required': plan_name,

@@ -1,59 +1,49 @@
 class SubscriptionCheckMiddleware:
     """
-    En cada request del panel de negocio, verifica el estado de suscripción.
-    Si está vencida, redirige a billing con aviso (excepto rutas de billing y auth).
-
-    Optimizaciones de rendimiento:
-    - El estado de suscripción se cachea en Redis 5 min → evita DB write por request.
-    - El objeto Business se guarda en request.user.__dict__ → resto del request sin query.
+    Verifica suscripción y pre-cachea el objeto Business en request.user.__dict__
+    para que sidebar, navbar y context_processor NO hagan queries adicionales.
     """
-    EXEMPT_PATHS = ['/auth/', '/superadmin/', '/negocio/billing/', '/tienda/', '/static/', '/media/']
-    # Cuántos segundos cachear el estado de la suscripción por usuario
-    _SUB_CACHE_TTL = 300
+    EXEMPT_PATHS = ('/auth/', '/superadmin/', '/negocio/billing/', '/tienda/', '/static/', '/media/')
+    _SUB_CACHE_TTL = 300  # 5 min
 
     def __init__(self, get_response):
         self.get_response = get_response
 
-    def __call__(self, request):
-        if (
-            request.user.is_authenticated
-            and request.user.is_business_owner
-            and not any(request.path.startswith(p) for p in self.EXEMPT_PATHS)
-        ):
-            from django.core.cache import cache
-            from apps.accounts.models import Business
+    def _load_business(self, user):
+        """Carga Business + SaaSSubscription en 1 query y lo cachea en user.__dict__."""
+        from apps.accounts.models import Business
+        try:
+            business = Business.objects.select_related('saas_subscription').get(owner=user)
+            user.__dict__['business'] = business
+            return business
+        except Business.DoesNotExist:
+            return None
 
-            cache_key = f'sub_status_{request.user.pk}'
+    def __call__(self, request):
+        user = request.user
+        if not user.is_authenticated or not user.is_business_owner:
+            return self.get_response(request)
+
+        # Siempre pre-cargar business para evitar lazy queries en templates
+        business = self._load_business(user)
+
+        # Solo verificar suscripción si NO es ruta exenta
+        if business and not request.path.startswith(self.EXEMPT_PATHS):
+            from django.core.cache import cache
+
+            cache_key = f'sub_status_{user.pk}'
             sub_status = cache.get(cache_key)
 
             if sub_status is None:
-                # Cache miss: consultar DB y calcular estado
-                try:
-                    business = Business.objects.select_related('saas_subscription').get(
-                        owner=request.user
-                    )
-                    request.user.__dict__['business'] = business
-                    sub = getattr(business, 'saas_subscription', None)
-                    if sub:
-                        sub.update_status()
-                        sub_status = sub.status
-                    else:
-                        sub_status = 'active'
-                except Business.DoesNotExist:
-                    sub_status = 'active'
+                sub = getattr(business, 'saas_subscription', None)
+                if sub:
+                    sub.update_status()
+                    sub_status = sub.status
+                else:
+                    sub_status = 'none'
                 cache.set(cache_key, sub_status, self._SUB_CACHE_TTL)
-            else:
-                # Cache hit: evitar re-query de Business si ya lo tenemos
-                if 'business' not in request.user.__dict__:
-                    try:
-                        business = Business.objects.select_related('saas_subscription').get(
-                            owner=request.user
-                        )
-                        request.user.__dict__['business'] = business
-                    except Business.DoesNotExist:
-                        pass
 
-            if sub_status in ['expired', 'suspended']:
+            if sub_status in ('expired', 'suspended'):
                 from django.shortcuts import redirect
                 return redirect('billing:expired')
 

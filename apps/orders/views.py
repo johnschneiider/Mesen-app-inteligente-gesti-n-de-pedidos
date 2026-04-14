@@ -15,15 +15,46 @@ class DashboardView(BusinessOwnerRequiredMixin, View):
     def get(self, request):
         business = request.user.business
         from django.utils import timezone
-        today = timezone.localtime(timezone.now()).date()
-
-        orders_today = Order.objects.filter(business=business, created_at__date=today)
-        recent_orders = Order.objects.filter(business=business).select_related('client', 'menu')[:10]
-
-        # Pedidos esta semana por día
         from django.db.models.functions import TruncDay
         from datetime import timedelta
+
+        today = timezone.localtime(timezone.now()).date()
         week_ago = timezone.now() - timedelta(days=7)
+
+        # Single aggregation: today's stats + preparing count (1 query instead of 3)
+        today_agg = Order.objects.filter(
+            business=business, created_at__date=today
+        ).aggregate(
+            orders_today=Count('id'),
+            revenue_today=Sum('total_amount'),
+        )
+
+        preparing_count = Order.objects.filter(
+            business=business, status='preparing'
+        ).count()
+
+        # Fiado pending: 1 query with both aggregates
+        fiado_agg = Order.objects.filter(
+            business=business, payment_type='fiado', is_paid=False
+        ).aggregate(
+            fiado_total=Sum('total_amount'),
+            fiado_clients=Count('client__id', distinct=True),
+        )
+
+        stats = {
+            'orders_today': today_agg['orders_today'] or 0,
+            'revenue_today': today_agg['revenue_today'] or 0,
+            'preparing_count': preparing_count,
+            'fiado_total': fiado_agg['fiado_total'] or 0,
+            'fiado_clients': fiado_agg['fiado_clients'] or 0,
+        }
+
+        # Recent orders (1 query)
+        recent_orders = Order.objects.filter(
+            business=business
+        ).select_related('client', 'menu')[:10]
+
+        # Weekly chart (1 query)
         weekly_data = (
             Order.objects.filter(business=business, created_at__gte=week_ago)
             .annotate(day=TruncDay('created_at'))
@@ -32,7 +63,7 @@ class DashboardView(BusinessOwnerRequiredMixin, View):
             .order_by('day')
         )
 
-        # Top clientes
+        # Top clients (1 query)
         top_clients = (
             Order.objects.filter(business=business)
             .values('client__full_name', 'client__phone', 'client__id')
@@ -40,22 +71,6 @@ class DashboardView(BusinessOwnerRequiredMixin, View):
             .order_by('-total')[:5]
         )
 
-        # Fiado pendiente
-        fiado_pending = Order.objects.filter(
-            business=business, payment_type='fiado', is_paid=False
-        )
-        fiado_total = fiado_pending.aggregate(t=Sum('total_amount'))['t'] or 0
-        fiado_clients = fiado_pending.values('client__id').distinct().count()
-
-        stats = {
-            'orders_today': orders_today.count(),
-            'revenue_today': orders_today.aggregate(t=Sum('total_amount'))['t'] or 0,
-            'preparing_count': Order.objects.filter(business=business, status='preparing').count(),
-            'fiado_total': fiado_total,
-            'fiado_clients': fiado_clients,
-        }
-
-        # Gráfico barras semanal
         days_labels = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
         week_counts = [0] * 7
         for entry in weekly_data:

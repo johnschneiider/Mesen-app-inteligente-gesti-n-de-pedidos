@@ -8,9 +8,11 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 ALLOWED_HOSTS += ['*']
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://unlifelike-greenly-tegan.ngrok-free.dev',
-]
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='',
+    cast=lambda v: [s.strip() for s in v.split(',') if s.strip()],
+)
 
 DJANGO_APPS = [
     'django.contrib.contenttypes',

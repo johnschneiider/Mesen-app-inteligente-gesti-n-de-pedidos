@@ -56,7 +56,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def has_business(self):
-        return hasattr(self, 'business')
+        # Avoid triggering a DB query: check __dict__ first (cached by middleware),
+        # then fields_cache (set by select_related), before falling back to DB.
+        if 'business' in self.__dict__:
+            return True
+        cache = self.__dict__.get('_state', None)
+        if cache and hasattr(cache, 'fields_cache') and 'business' in cache.fields_cache:
+            return True
+        try:
+            return self.business is not None
+        except self.__class__.business.RelatedObjectDoesNotExist:
+            return False
 
     def get_initials(self):
         if self.full_name:
