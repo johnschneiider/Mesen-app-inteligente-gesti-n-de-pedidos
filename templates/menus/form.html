@@ -238,21 +238,17 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
         </div>
 
         <!-- URL row -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-            <div style="flex:1;background:var(--page-bg);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;overflow:hidden;">
-                <span style="font-size:12px;color:var(--text-2);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;"
-                      x-text="url"></span>
-            </div>
+        <div style="background:var(--page-bg);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <span style="flex:1;font-size:12px;color:var(--text-2);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                  x-text="url"></span>
             <button @click="copy()" type="button"
-                    style="flex-shrink:0;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;transition:all .2s;"
-                    :style="copied ? 'background:#DCFCE7;color:#16a34a;' : 'background:var(--green);color:white;'">
-                <!-- Copy icon (Lucide Copy) -->
-                <svg x-show="!copied" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                    style="flex-shrink:0;background:none;border:none;outline:none;box-shadow:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;white-space:nowrap;transition:color .15s;"
+                    :style="copied ? 'color:#16a34a;' : 'color:var(--green);'">
+                <svg x-show="!copied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
                 </svg>
-                <!-- Check icon -->
-                <svg x-show="copied" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                <svg x-show="copied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
                     <path d="M20 6L9 17l-5-5"/>
                 </svg>
                 <span x-text="copied ? '¡Copiado!' : 'Copiar'"></span>
