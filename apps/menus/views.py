@@ -32,7 +32,8 @@ class MenuCreateView(BusinessOwnerRequiredMixin, View):
             if request.FILES.get('photo'):
                 MenuPhoto.objects.create(menu=menu, image=request.FILES['photo'], order=0)
             # redirect to edit so ingredients/photos can be added immediately
-            return redirect('menus:update', pk=menu.pk)
+            from django.urls import reverse
+            return redirect(reverse('menus:update', kwargs={'pk': menu.pk}) + '?created=1')
         return render(request, self.template_name, {'form': form, 'action': 'Crear'})
 
 
