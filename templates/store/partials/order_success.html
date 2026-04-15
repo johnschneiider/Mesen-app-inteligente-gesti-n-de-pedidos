@@ -1,18 +1,56 @@
 {% load mesenu_tags %}
-<div style="text-align:center;padding:20px 0;">
-    <div style="width:48px;height:48px;border-radius:50%;background:#E6F7F1;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5L18 6" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<div style="padding:20px 0;">
+    <!-- ── Checkmark ── -->
+    <div style="text-align:center;margin-bottom:16px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#E6F7F1;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5L18 6" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:4px;">¡Pedido confirmado!</h3>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:0;">
+            Tu pedido #{{ order.order_number|upper }} fue recibido.<br>
+            El restaurante lo está preparando.
+        </p>
     </div>
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px;">¡Pedido confirmado!</h3>
-    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;">
-        Tu pedido #{{ order.order_number|stringformat:"s"|slice:":8"|upper }} fue recibido.<br>
-        El restaurante lo está preparando.
-    </p>
-    <div style="background:var(--bg-alt);border-radius:8px;padding:12px;text-align:left;margin-bottom:16px;">
-        <div style="font-size:12px;color:var(--text-3);margin-bottom:4px;">Resumen</div>
-        <div style="font-size:13px;font-weight:500;">{{ order.menu.title }} ×{{ order.quantity }}</div>
-        <div style="font-size:15px;font-weight:700;color:var(--green);margin-top:6px;">{{ order.total_amount|currency_cop }}</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Pago: {{ order.get_payment_type_display }}</div>
+
+    <!-- ── Order summary ── -->
+    <div style="background:var(--page-bg);border-radius:10px;padding:12px 14px;text-align:left;margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Resumen</div>
+        <div style="font-size:13px;font-weight:500;">{{ order.menu.title }} × {{ order.quantity }}</div>
+        <div style="font-size:17px;font-weight:700;color:var(--green);margin-top:4px;">{{ order.total_amount|currency_cop }}</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:3px;">{{ order.get_payment_type_display }} · {{ order.get_order_type_display }}</div>
     </div>
-    <button onclick="window.location.reload()" class="btn-primary" style="width:100%;">Ver menú de nuevo</button>
+
+    <!-- ── Fiado alert ── -->
+    {% if order.payment_type == 'fiado' %}
+    <div style="background:#FEF3C7;border:0.5px solid #FCD34D;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;">
+        <span style="font-size:18px;flex-shrink:0;">📋</span>
+        <div>
+            <div style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:2px;">Pedido en fiado</div>
+            <div style="font-size:12px;color:#B45309;line-height:1.5;">Este pedido quedó registrado como crédito. Puedes ver tu saldo pendiente en tu cuenta.</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Account banner ── -->
+    <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:0.5px solid var(--green-border);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:var(--green-light);border:1.5px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--green-dark);flex-shrink:0;">
+                {{ request.user.full_name|initials|default:"?" }}
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--green-dark);">Tu pedido quedó en tu cuenta</div>
+                <div style="font-size:11px;color:var(--text-3);">{{ request.user.phone }}</div>
+            </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:10px;">
+            Guarda este número <strong>({{ request.user.phone }})</strong> y tu contraseña para volver a pedir o consultar tu historial.
+        </div>
+        <a href="{% url 'accounts:consumer_dashboard' %}"
+           style="display:flex;align-items:center;justify-content:center;gap:6px;background:var(--green);color:white;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;text-decoration:none;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.5" stroke="white" stroke-width="1.3" fill="none"/><rect x="8" y="1" width="5" height="5" rx="1.5" stroke="white" stroke-width="1.3" fill="none"/><rect x="1" y="8" width="5" height="5" rx="1.5" stroke="white" stroke-width="1.3" fill="none"/><rect x="8" y="8" width="5" height="5" rx="1.5" stroke="white" stroke-width="1.3" fill="none"/></svg>
+            Ver mi cuenta y pedidos
+        </a>
+    </div>
+
+    <button onclick="window.location.reload()" class="btn-ghost" style="width:100%;font-size:13px;">Volver al menú</button>
 </div>

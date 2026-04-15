@@ -180,7 +180,7 @@ class ConsumerDashboardView(LoginRequiredMixin, View):
 
 
 class ConsumerEditView(LoginRequiredMixin, View):
-    """Consumer edits their own profile (name, avatar)."""
+    """Consumer edits their own profile (name, avatar, password)."""
     template_name = 'cuenta/edit.html'
     login_url = '/auth/login/'
 
@@ -190,6 +190,30 @@ class ConsumerEditView(LoginRequiredMixin, View):
 
     def post(self, request):
         user = request.user
+        action = request.POST.get('action', 'profile')
+
+        if action == 'password':
+            current = request.POST.get('current_password', '')
+            new_pw = request.POST.get('new_password', '')
+            confirm_pw = request.POST.get('confirm_password', '')
+            addresses = user.addresses.all().order_by('-is_default', 'id')
+            if not user.check_password(current):
+                messages.error(request, 'La contraseña actual no es correcta.')
+                return render(request, self.template_name, {'u': user, 'addresses': addresses})
+            if len(new_pw) < 6:
+                messages.error(request, 'La nueva contraseña debe tener al menos 6 caracteres.')
+                return render(request, self.template_name, {'u': user, 'addresses': addresses})
+            if new_pw != confirm_pw:
+                messages.error(request, 'Las contraseñas no coinciden.')
+                return render(request, self.template_name, {'u': user, 'addresses': addresses})
+            user.set_password(new_pw)
+            user.save()
+            # Re-login to avoid session invalidation
+            login(request, user, backend='apps.accounts.backends.PhoneBackend')
+            messages.success(request, 'Contraseña actualizada correctamente.')
+            return redirect('accounts:consumer_edit')
+
+        # Default: profile update
         full_name = request.POST.get('full_name', '').strip()
         if full_name:
             user.full_name = full_name
