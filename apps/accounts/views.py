@@ -171,11 +171,16 @@ class ConsumerDashboardView(LoginRequiredMixin, View):
         )
         unpaid = orders.filter(is_paid=False).exclude(status='cancelled')
         debt_total = unpaid.aggregate(t=Sum('total_amount'))['t'] or 0
+        total_spent = orders.filter(is_paid=True).aggregate(t=Sum('total_amount'))['t'] or 0
+        businesses_count = orders.values('business').distinct().count()
 
         return render(request, self.template_name, {
             'orders': orders[:30],
             'unpaid': unpaid,
             'debt_total': debt_total,
+            'total_spent': total_spent,
+            'total_orders': orders.count(),
+            'businesses_count': businesses_count,
         })
 
 
