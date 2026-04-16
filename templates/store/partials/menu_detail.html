@@ -52,12 +52,12 @@
                 {% for opt in menu.options.all %}
                 <label
                     @click="selectedOptionId={{ opt.pk }}; selectedPrice={{ opt.price }};"
-                    style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;cursor:pointer;border:1.5px solid;"
-                    :style="selectedOptionId==={{ opt.pk }} ? 'border-color:var(--green);background:var(--green-light);' : 'border-color:var(--border);background:white;'">
+                    style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;cursor:pointer;border:1.5px solid var(--border);background:white;transition:border-color .15s,background .15s;"
+                    :style="selectedOptionId==={{ opt.pk }} ? { borderColor: 'var(--green)', background: 'var(--green-light)' } : { borderColor: 'var(--border)', background: 'white' }">
                     <div style="display:flex;align-items:center;gap:10px;">
-                        <div style="width:16px;height:16px;border-radius:50%;border:2px solid;flex-shrink:0;display:flex;align-items:center;justify-content:center;"
-                             :style="selectedOptionId==={{ opt.pk }} ? 'border-color:var(--green);' : 'border-color:var(--border);'">
-                            <div style="width:8px;height:8px;border-radius:50%;background:var(--green);"
+                        <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border-color .15s;"
+                             :style="selectedOptionId==={{ opt.pk }} ? { borderColor: 'var(--green)' } : { borderColor: 'var(--border)' }">
+                            <div style="width:9px;height:9px;border-radius:50%;background:var(--green);"
                                  x-show="selectedOptionId==={{ opt.pk }}"></div>
                         </div>
                         <span style="font-size:14px;font-weight:500;color:var(--text-1);">{{ opt.name }}</span>
@@ -199,7 +199,7 @@
         <button type="submit"
                 {% if menu.options.exists %}:disabled="!selectedOptionId"{% endif %}
                 style="width:100%;padding:15px;background:var(--green);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;transition:opacity 0.15s;"
-                {% if menu.options.exists %}:style="!selectedOptionId ? 'opacity:0.45;cursor:not-allowed;' : ''"{% endif %}>
+                {% if menu.options.exists %}:style="{ opacity: !selectedOptionId ? '0.45' : '1', cursor: !selectedOptionId ? 'not-allowed' : 'pointer' }"{% endif %}>
             {% if menu.options.exists %}
             Confirmar pedido <span x-show="selectedPrice" x-text="'• ' + formatCOP(selectedPrice)"></span>
             {% else %}
