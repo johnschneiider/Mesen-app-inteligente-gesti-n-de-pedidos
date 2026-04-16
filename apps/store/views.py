@@ -57,7 +57,7 @@ PAYMENT_OPTIONS = [
     {'val': 'cash',     'icon': '💵', 'label': 'Efectivo'},
     {'val': 'transfer', 'icon': '🔁', 'label': 'Transferencia'},
     {'val': 'card',     'icon': '💳', 'label': 'Tarjeta'},
-    {'val': 'fiado',    'icon': '📋', 'label': 'Fiado'},
+    {'val': 'fiado',    'icon': '📋', 'label': 'Crédito'},
 ]
 
 ORDER_TYPES = [

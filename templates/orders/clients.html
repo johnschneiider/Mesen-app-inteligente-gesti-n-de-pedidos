@@ -14,7 +14,7 @@
 {% if fiado_total > 0 %}
 <div class="alert-fiado" style="margin-bottom:16px;">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v3.5M6.5 9v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-    <span>Fiado pendiente total: <strong>{{ fiado_total|currency_cop }}</strong> en {{ fiado_orders }} pedido{{ fiado_orders|pluralize:"s" }}</span>
+    <span>Crédito pendiente total: <strong>{{ fiado_total|currency_cop }}</strong> en {{ fiado_orders }} pedido{{ fiado_orders|pluralize:"s" }}</span>
 </div>
 {% endif %}
 
@@ -26,7 +26,7 @@
                 <th>Teléfono</th>
                 <th>Pedidos</th>
                 <th>Total gastado</th>
-                <th>Fiado pendiente</th>
+                <th>Crédito pendiente</th>
                 <th>Último pedido</th>
             </tr>
         </thead>

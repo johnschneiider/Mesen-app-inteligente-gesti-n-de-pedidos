@@ -15,7 +15,7 @@ class Order(models.Model):
         ('cash', 'Efectivo'),
         ('transfer', 'Transferencia'),
         ('card', 'Tarjeta'),
-        ('fiado', 'Fiado / Crédito'),
+        ('fiado', 'Crédito'),
     ]
     ORDER_TYPES = [
         ('on_site', 'En el lugar'),
