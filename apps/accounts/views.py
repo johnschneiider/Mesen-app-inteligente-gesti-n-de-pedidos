@@ -174,6 +174,16 @@ class ConsumerDashboardView(LoginRequiredMixin, View):
         total_spent = orders.filter(is_paid=True).aggregate(t=Sum('total_amount'))['t'] or 0
         businesses_count = orders.values('business').distinct().count()
 
+        # Restaurantes únicos ordenados por último pedido
+        from apps.accounts.models import Business
+        business_ids = (
+            Order.objects
+            .filter(client=request.user)
+            .values_list('business_id', flat=True)
+            .distinct()
+        )
+        my_restaurants = Business.objects.filter(id__in=business_ids).only('id', 'name', 'slug', 'logo')
+
         return render(request, self.template_name, {
             'orders': orders[:30],
             'unpaid': unpaid,
@@ -181,6 +191,7 @@ class ConsumerDashboardView(LoginRequiredMixin, View):
             'total_spent': total_spent,
             'total_orders': orders.count(),
             'businesses_count': businesses_count,
+            'my_restaurants': my_restaurants,
         })
 
 

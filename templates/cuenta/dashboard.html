@@ -148,5 +148,36 @@
     </div>
     {% endif %}
 
+    <!-- ── MIS RESTAURANTES ── -->
+    {% if my_restaurants %}
+    <div style="margin-top:28px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;padding:0 2px;">Pedir de nuevo</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+            {% for biz in my_restaurants %}
+            <a href="{{ biz.get_store_url }}"
+               style="background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;text-decoration:none;transition:box-shadow .15s,border-color .15s;"
+               onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)';this.style.borderColor='var(--green-border)'"
+               onmouseout="this.style.boxShadow='none';this.style.borderColor='var(--border)'">
+                <!-- Logo / initial -->
+                <div style="width:44px;height:44px;border-radius:12px;overflow:hidden;background:var(--green-light);border:1px solid var(--green-border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--green-dark);">
+                    {% if biz.logo %}
+                    <img src="{{ biz.logo.url }}" style="width:100%;height:100%;object-fit:cover;">
+                    {% else %}
+                    {{ biz.name|slice:":1"|upper }}
+                    {% endif %}
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ biz.name }}</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:2px;">mesenu.com/tienda/{{ biz.slug }}/</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}
