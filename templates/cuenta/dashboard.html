@@ -97,41 +97,103 @@
     <div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;padding:0 2px;">Historial de pedidos</div>
 
     {% if orders %}
-    <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);">
+
+        <!-- Table header -->
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:10px 16px;background:var(--page-bg);border-bottom:1px solid var(--border);">
+            <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Pedido</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;text-align:right;">Total</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;text-align:right;min-width:72px;">Estado</div>
+        </div>
+
+        <!-- Accordion rows -->
         {% for order in orders %}
-        <div style="background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,.04);">
-            <!-- Status icon -->
-            <div style="width:40px;height:40px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-                {% if order.status == 'cancelled' %}background:#FEE2E2;{% elif order.is_paid %}background:#DCFCE7;{% else %}background:#FEF3C7;{% endif %}">
-                {% if order.order_type == 'delivery' %}
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{% if order.status == 'cancelled' %}#DC2626{% elif order.is_paid %}#16a34a{% else %}#D97706{% endif %}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-                </svg>
-                {% else %}
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{% if order.status == 'cancelled' %}#DC2626{% elif order.is_paid %}#16a34a{% else %}#D97706{% endif %}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-                </svg>
-                {% endif %}
+        <div x-data="{ open: false }"
+             style="border-bottom:{% if not forloop.last %}1px solid var(--border){% else %}none{% endif %};">
+
+            <!-- Row summary (clickable) -->
+            <button type="button" @click="open = !open"
+                    style="width:100%;display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:13px 16px;background:none;border:none;cursor:pointer;text-align:left;transition:background .12s;"
+                    :style="open ? 'background:var(--page-bg);' : ''"
+                    onmouseover="if(!this.classList.contains('open'))this.style.background='#fafafa'" onmouseout="if(!this.classList.contains('open'))this.style.background=''">
+
+                <!-- Left: icon + name + restaurant -->
+                <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                    <div style="width:34px;height:34px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+                        {% if order.status == 'cancelled' %}background:#FEE2E2;{% elif order.is_paid %}background:#DCFCE7;{% else %}background:#FEF3C7;{% endif %}">
+                        {% if order.order_type == 'delivery' %}
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{% if order.status == 'cancelled' %}#DC2626{% elif order.is_paid %}#16a34a{% else %}#D97706{% endif %}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                        </svg>
+                        {% else %}
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{% if order.status == 'cancelled' %}#DC2626{% elif order.is_paid %}#16a34a{% else %}#D97706{% endif %}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+                        </svg>
+                        {% endif %}
+                    </div>
+                    <div style="min-width:0;">
+                        <div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ order.menu.title }}</div>
+                        <div style="font-size:11px;color:var(--text-3);margin-top:1px;">{{ order.business.name }} · {{ order.created_at|date:"j N Y" }}</div>
+                    </div>
+                </div>
+
+                <!-- Amount -->
+                <div style="font-size:14px;font-weight:800;color:var(--text-1);text-align:right;white-space:nowrap;">{{ order.total_amount|currency_cop }}</div>
+
+                <!-- Status + chevron -->
+                <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;min-width:72px;">
+                    {% if order.status == 'cancelled' %}
+                    <span style="font-size:10px;background:#FEE2E2;color:#DC2626;border-radius:99px;padding:3px 8px;font-weight:700;white-space:nowrap;">Cancelado</span>
+                    {% elif order.is_paid %}
+                    <span style="font-size:10px;background:#DCFCE7;color:#16a34a;border-radius:99px;padding:3px 8px;font-weight:700;white-space:nowrap;">✓ Pagado</span>
+                    {% else %}
+                    <span style="font-size:10px;background:#FEF3C7;color:#92400E;border-radius:99px;padding:3px 8px;font-weight:700;white-space:nowrap;">Pendiente</span>
+                    {% endif %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                         style="flex-shrink:0;transition:transform .2s;" :style="open ? 'transform:rotate(180deg)' : ''">
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </div>
+            </button>
+
+            <!-- Expanded detail -->
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 -translate-y-1"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 style="display:none;padding:0 16px 14px;border-top:1px dashed var(--border);">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+                    <div style="background:var(--page-bg);border-radius:10px;padding:10px 12px;">
+                        <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">Tipo</div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-1);">{{ order.get_order_type_display }}</div>
+                    </div>
+                    <div style="background:var(--page-bg);border-radius:10px;padding:10px 12px;">
+                        <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">Pago</div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-1);">{{ order.get_payment_type_display }}</div>
+                    </div>
+                    <div style="background:var(--page-bg);border-radius:10px;padding:10px 12px;">
+                        <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">Hora</div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-1);">{{ order.created_at|date:"H:i" }}</div>
+                    </div>
+                    <div style="background:var(--page-bg);border-radius:10px;padding:10px 12px;">
+                        <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">Cantidad</div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-1);">× {{ order.quantity }}</div>
+                    </div>
+                    {% if order.delivery_address %}
+                    <div style="background:var(--page-bg);border-radius:10px;padding:10px 12px;grid-column:1/-1;">
+                        <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">Dirección</div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-1);">{{ order.delivery_address.address }}</div>
+                    </div>
+                    {% endif %}
+                    {% if order.notes %}
+                    <div style="background:var(--page-bg);border-radius:10px;padding:10px 12px;grid-column:1/-1;">
+                        <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">Notas</div>
+                        <div style="font-size:12px;color:var(--text-2);font-style:italic;">"{{ order.notes }}"</div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- Info -->
-            <div style="flex:1;min-width:0;">
-                <div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px;">{{ order.menu.title }}</div>
-                <div style="font-size:11px;color:var(--text-3);">{{ order.business.name }}</div>
-                <div style="font-size:11px;color:var(--text-3);margin-top:1px;">{{ order.created_at|date:"j N Y, H:i" }}</div>
-            </div>
-
-            <!-- Amount + badge -->
-            <div style="text-align:right;flex-shrink:0;">
-                <div style="font-size:15px;font-weight:800;color:var(--text-1);margin-bottom:5px;">{{ order.total_amount|currency_cop }}</div>
-                {% if order.status == 'cancelled' %}
-                <span style="font-size:10px;background:#FEE2E2;color:#DC2626;border-radius:99px;padding:3px 9px;font-weight:700;white-space:nowrap;">Cancelado</span>
-                {% elif order.is_paid %}
-                <span style="font-size:10px;background:#DCFCE7;color:#16a34a;border-radius:99px;padding:3px 9px;font-weight:700;white-space:nowrap;">✓ Pagado</span>
-                {% else %}
-                <span style="font-size:10px;background:#FEF3C7;color:#92400E;border-radius:99px;padding:3px 9px;font-weight:700;white-space:nowrap;">Pendiente</span>
-                {% endif %}
-            </div>
         </div>
         {% endfor %}
     </div>
