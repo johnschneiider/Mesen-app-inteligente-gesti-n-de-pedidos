@@ -63,6 +63,49 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
             </div>
         </div>
 
+        <!-- Opciones de precio (inline en creación) -->
+        {% if not form.instance.pk %}
+        <div x-data="inlineList('option')" style="margin-top:4px;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+                <span style="font-size:13px;font-weight:600;color:var(--text-1);">Opciones de precio</span>
+                <span style="font-size:11px;color:var(--text-3);">(opcional)</span>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);margin:0 0 10px;">
+                Si el plato tiene versiones con distintos precios (ej: "Con sopa" / "Solo bandeja"), agrégalas aquí.
+            </p>
+            <div id="create-options-list">
+                <template x-for="(item, idx) in items" :key="idx">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--page-bg);border-radius:var(--radius-md);margin-bottom:5px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="2.5" fill="var(--green)"/></svg>
+                            <span style="font-size:13px;color:var(--text-1);" x-text="item.name"></span>
+                            <span style="font-size:11px;color:var(--green-dark);background:var(--green-light);border:0.5px solid var(--green-border);border-radius:99px;padding:1px 7px;" x-text="'$' + Number(item.price).toLocaleString('es-CO')"></span>
+                            <input type="hidden" :name="'option_name_' + idx" :value="item.name">
+                            <input type="hidden" :name="'option_price_' + idx" :value="item.price">
+                        </div>
+                        <button type="button" @click="items.splice(idx, 1)"
+                            style="background:none;border:none;cursor:pointer;padding:2px;color:var(--text-3);">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                </template>
+                <div x-show="items.length === 0" style="font-size:12px;color:var(--text-3);padding:8px 0;text-align:center;">Sin opciones — el cliente verá el precio base</div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:8px;border-top:1px solid var(--border);padding-top:10px;align-items:flex-end;">
+                <div class="form-group" style="flex:1;margin:0;">
+                    <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre de la opción</label>
+                    <input type="text" x-model="newName" placeholder="Ej: Con sopa" @keydown.enter.prevent="add()" style="width:100%;">
+                </div>
+                <div class="form-group" style="width:110px;margin:0;">
+                    <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Precio ($)</label>
+                    <input type="number" x-model="newExtra" placeholder="13000" min="0" @keydown.enter.prevent="add()" style="width:100%;">
+                </div>
+                <button type="button" @click="add()" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
+            </div>
+            <input type="hidden" name="option_count" :value="items.length">
+        </div>
+        {% endif %}
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div class="form-group">
                 <label class="form-label" for="{{ form.valid_from.id_for_label }}">Disponible desde *</label>
@@ -144,50 +187,43 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
         </div>
         <input type="hidden" name="ingredient_count" :value="items.length">
     </div>
-
-    <!-- Opciones de precio inline (solo en creación) -->
-    <div class="card" style="margin-bottom:16px;" x-data="inlineList('option')">
-        <div class="section-header" style="margin-bottom:4px;"><h2>Opciones de precio</h2></div>
-        <p style="font-size:12px;color:var(--text-3);margin:0 0 12px;">
-            Si el plato tiene versiones con distintos precios (ej: "Con sopa" / "Solo bandeja"), agrégalas aquí.
-        </p>
-        <div id="create-options-list">
-            <template x-for="(item, idx) in items" :key="idx">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--page-bg);border-radius:var(--radius-md);margin-bottom:5px;">
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="2.5" fill="var(--green)"/></svg>
-                        <span style="font-size:13px;color:var(--text-1);" x-text="item.name"></span>
-                        <span style="font-size:11px;color:var(--green-dark);background:var(--green-light);border:0.5px solid var(--green-border);border-radius:99px;padding:1px 7px;" x-text="'$' + Number(item.price).toLocaleString('es-CO')"></span>
-                        <input type="hidden" :name="'option_name_' + idx" :value="item.name">
-                        <input type="hidden" :name="'option_price_' + idx" :value="item.price">
-                    </div>
-                    <button type="button" @click="items.splice(idx, 1)"
-                        style="background:none;border:none;cursor:pointer;padding:2px;color:var(--text-3);">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                    </button>
-                </div>
-            </template>
-            <div x-show="items.length === 0" style="font-size:12px;color:var(--text-3);padding:12px 0;text-align:center;">Sin opciones todavía — el cliente verá el precio base del menú</div>
-        </div>
-        <div style="display:flex;gap:6px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;align-items:flex-end;">
-            <div class="form-group" style="flex:1;margin:0;">
-                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre de la opción</label>
-                <input type="text" x-model="newName" placeholder="Ej: Con sopa" @keydown.enter.prevent="add()" style="width:100%;">
-            </div>
-            <div class="form-group" style="width:110px;margin:0;">
-                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Precio ($)</label>
-                <input type="number" x-model="newExtra" placeholder="13000" min="0" @keydown.enter.prevent="add()" style="width:100%;">
-            </div>
-            <button type="button" @click="add()" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
-        </div>
-        <input type="hidden" name="option_count" :value="items.length">
-    </div>
     {% endif %}
 
 </form>
 
-<!-- ── HTMX sections (fotos + ingredientes) solo en edición, fuera del form ── -->
+<!-- ── HTMX sections solo en edición, fuera del form ── -->
 {% if menu %}
+
+<!-- Opciones de precio (HTMX — justo debajo del card de info) -->
+<div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <span style="font-size:13px;font-weight:600;color:var(--text-1);">Opciones de precio</span>
+        <span style="font-size:11px;color:var(--text-3);">(opcional)</span>
+    </div>
+    <p style="font-size:12px;color:var(--text-3);margin:0 0 10px;">
+        Si el plato tiene versiones con distintos precios (ej: "Con sopa" / "Solo bandeja"), agrégalas aquí.
+    </p>
+    <div id="options-list">
+        {% include 'menus/partials/options.html' with menu=menu %}
+    </div>
+    <form hx-post="{% url 'menus:add_option' menu.pk %}"
+          hx-target="#options-list"
+          hx-swap="innerHTML"
+          hx-on::after-request="this.reset()"
+          style="display:flex;gap:6px;margin-top:8px;border-top:1px solid var(--border);padding-top:10px;align-items:flex-end;">
+        {% csrf_token %}
+        <div class="form-group" style="flex:1;margin:0;">
+            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre de la opción</label>
+            <input type="text" name="name" placeholder="Ej: Con sopa" required style="width:100%;">
+        </div>
+        <div class="form-group" style="width:110px;margin:0;">
+            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Precio ($)</label>
+            <input type="number" name="price" placeholder="13000" min="0" required style="width:100%;">
+        </div>
+        <button type="submit" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
+    </form>
+</div>
+
 <div class="card" style="margin-bottom:16px;">
     <div class="section-header" style="margin-bottom:12px;"><h2>Fotos del plato</h2></div>
     <div id="photos-section">
@@ -240,33 +276,6 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
     </form>
 </div>
 
-<!-- ── OPCIONES DE PRECIO ── -->
-<div class="card" style="margin-bottom:16px;">
-    <div class="section-header" style="margin-bottom:4px;"><h2>Opciones de precio</h2></div>
-    <p style="font-size:12px;color:var(--text-3);margin:0 0 12px;">
-        Si el plato tiene versiones con distintos precios (ej: "Con sopa" / "Solo bandeja"), agrégalas aquí.
-        Cuando existan opciones, el cliente las verá como selección obligatoria al pedir.
-    </p>
-    <div id="options-list">
-        {% include 'menus/partials/options.html' with menu=menu %}
-    </div>
-    <form hx-post="{% url 'menus:add_option' menu.pk %}"
-          hx-target="#options-list"
-          hx-swap="innerHTML"
-          hx-on::after-request="this.reset()"
-          style="display:flex;gap:6px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;align-items:flex-end;">
-        {% csrf_token %}
-        <div class="form-group" style="flex:1;margin:0;">
-            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre de la opción</label>
-            <input type="text" name="name" placeholder="Ej: Con sopa" required style="width:100%;">
-        </div>
-        <div class="form-group" style="width:110px;margin:0;">
-            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Precio ($)</label>
-            <input type="number" name="price" placeholder="13000" min="0" required style="width:100%;">
-        </div>
-        <button type="submit" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
-    </form>
-</div>
 {% endif %}
 
 <!-- ── Botón guardar al final (asociado al form via atributo form=) ── -->
