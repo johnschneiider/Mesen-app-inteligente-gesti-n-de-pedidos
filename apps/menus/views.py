@@ -31,9 +31,35 @@ class MenuCreateView(BusinessOwnerRequiredMixin, View):
             # handle photo upload
             if request.FILES.get('photo'):
                 MenuPhoto.objects.create(menu=menu, image=request.FILES['photo'], order=0)
-            # redirect to edit so ingredients/photos can be added immediately
-            from django.urls import reverse
-            return redirect(reverse('menus:update', kwargs={'pk': menu.pk}) + '?created=1')
+            # handle inline ingredients
+            ing_count = int(request.POST.get('ingredient_count', 0))
+            for i in range(ing_count):
+                name = request.POST.get(f'ingredient_name_{i}', '').strip()
+                grams_raw = request.POST.get(f'ingredient_grams_{i}', '').strip()
+                if name:
+                    MenuIngredient.objects.create(
+                        menu=menu, name=name,
+                        grams=int(grams_raw) if grams_raw.isdigit() else None,
+                        order=i,
+                    )
+            # handle inline options
+            opt_count = int(request.POST.get('option_count', 0))
+            for i in range(opt_count):
+                oname = request.POST.get(f'option_name_{i}', '').strip()
+                oprice_raw = request.POST.get(f'option_price_{i}', '').strip()
+                if oname and oprice_raw.isdigit():
+                    MenuOption.objects.create(
+                        menu=menu, name=oname, price=int(oprice_raw), order=i,
+                    )
+            # Show modal on this page (request.GET.created triggers it in template)
+            from django.http import QueryDict
+            fake_get = QueryDict(mutable=True)
+            fake_get['created'] = '1'
+            request.GET = fake_get
+            return render(request, self.template_name, {
+                'form': DailyMenuForm(),
+                'action': 'Crear',
+            })
         return render(request, self.template_name, {'form': form, 'action': 'Crear'})
 
 

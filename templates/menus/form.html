@@ -108,22 +108,79 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
         <div style="font-size:11px;color:var(--text-3);margin-top:8px;">Podrás agregar más fotos después de guardar el menú.</div>
     </div>
 
-    <!-- Ingredientes placeholder (solo en creación) -->
-    <div class="card" style="margin-bottom:16px;">
+    <!-- Ingredientes inline (solo en creación — se acumulan localmente) -->
+    <div class="card" style="margin-bottom:16px;" x-data="inlineList('ingredient')">
         <div class="section-header" style="margin-bottom:0;"><h2>Ingredientes</h2></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:14px;background:var(--bg-alt);border-radius:var(--radius);border:1px solid var(--border);">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:var(--text-3);"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v4M8 10.5v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-            <span style="font-size:12px;color:var(--text-3);">Guarda el menú primero para agregar ingredientes.</span>
+        <div id="create-ingredients-list" style="margin-top:12px;">
+            <template x-for="(item, idx) in items" :key="idx">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--page-bg);border-radius:var(--radius-md);margin-bottom:5px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="2.5" fill="var(--green)"/></svg>
+                        <span style="font-size:13px;color:var(--text-1);" x-text="item.name"></span>
+                        <template x-if="item.grams">
+                            <span style="font-size:11px;color:var(--green-dark);background:var(--green-light);border:0.5px solid var(--green-border);border-radius:99px;padding:1px 7px;" x-text="item.grams + 'g'"></span>
+                        </template>
+                        <input type="hidden" :name="'ingredient_name_' + idx" :value="item.name">
+                        <input type="hidden" :name="'ingredient_grams_' + idx" :value="item.grams || ''">
+                    </div>
+                    <button type="button" @click="items.splice(idx, 1)"
+                        style="background:none;border:none;cursor:pointer;padding:2px;color:var(--text-3);">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+            </template>
+            <div x-show="items.length === 0" style="font-size:12px;color:var(--text-3);padding:12px 0;text-align:center;">Sin ingredientes todavía</div>
         </div>
+        <div style="display:flex;gap:6px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;align-items:flex-end;">
+            <div class="form-group" style="flex:1;margin:0;">
+                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Ingrediente</label>
+                <input type="text" x-model="newName" placeholder="Ej: Arroz blanco" @keydown.enter.prevent="add()" style="width:100%;">
+            </div>
+            <div class="form-group" style="width:80px;margin:0;">
+                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Gramos</label>
+                <input type="number" x-model="newExtra" placeholder="g" min="1" @keydown.enter.prevent="add()" style="width:100%;">
+            </div>
+            <button type="button" @click="add()" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
+        </div>
+        <input type="hidden" name="ingredient_count" :value="items.length">
     </div>
 
-    <!-- Opciones placeholder (solo en creación) -->
-    <div class="card" style="margin-bottom:16px;">
-        <div class="section-header" style="margin-bottom:0;"><h2>Opciones de precio</h2></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:14px;background:var(--bg-alt);border-radius:var(--radius);border:1px solid var(--border);">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:var(--text-3);"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v4M8 10.5v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-            <span style="font-size:12px;color:var(--text-3);">Guarda el menú primero para agregar opciones (ej: "Con sopa", "Solo bandeja").</span>
+    <!-- Opciones de precio inline (solo en creación) -->
+    <div class="card" style="margin-bottom:16px;" x-data="inlineList('option')">
+        <div class="section-header" style="margin-bottom:4px;"><h2>Opciones de precio</h2></div>
+        <p style="font-size:12px;color:var(--text-3);margin:0 0 12px;">
+            Si el plato tiene versiones con distintos precios (ej: "Con sopa" / "Solo bandeja"), agrégalas aquí.
+        </p>
+        <div id="create-options-list">
+            <template x-for="(item, idx) in items" :key="idx">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--page-bg);border-radius:var(--radius-md);margin-bottom:5px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="2.5" fill="var(--green)"/></svg>
+                        <span style="font-size:13px;color:var(--text-1);" x-text="item.name"></span>
+                        <span style="font-size:11px;color:var(--green-dark);background:var(--green-light);border:0.5px solid var(--green-border);border-radius:99px;padding:1px 7px;" x-text="'$' + Number(item.price).toLocaleString('es-CO')"></span>
+                        <input type="hidden" :name="'option_name_' + idx" :value="item.name">
+                        <input type="hidden" :name="'option_price_' + idx" :value="item.price">
+                    </div>
+                    <button type="button" @click="items.splice(idx, 1)"
+                        style="background:none;border:none;cursor:pointer;padding:2px;color:var(--text-3);">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+            </template>
+            <div x-show="items.length === 0" style="font-size:12px;color:var(--text-3);padding:12px 0;text-align:center;">Sin opciones todavía — el cliente verá el precio base del menú</div>
         </div>
+        <div style="display:flex;gap:6px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;align-items:flex-end;">
+            <div class="form-group" style="flex:1;margin:0;">
+                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre de la opción</label>
+                <input type="text" x-model="newName" placeholder="Ej: Con sopa" @keydown.enter.prevent="add()" style="width:100%;">
+            </div>
+            <div class="form-group" style="width:110px;margin:0;">
+                <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Precio ($)</label>
+                <input type="number" x-model="newExtra" placeholder="13000" min="0" @keydown.enter.prevent="add()" style="width:100%;">
+            </div>
+            <button type="button" @click="add()" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
+        </div>
+        <input type="hidden" name="option_count" :value="items.length">
     </div>
     {% endif %}
 
@@ -231,18 +288,22 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
             catch(e) { const el = document.createElement('textarea'); el.value = this.url; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); }
             this.copied = true;
             setTimeout(() => this.copied = false, 2000);
+        },
+        close() {
+            this.open = false;
+            window.location.href = '{% url "orders:dashboard" %}';
         }
      }"
      x-show="open"
      x-cloak
-     @keydown.escape.window="open = false"
+     @keydown.escape.window="close()"
      style="position:fixed;inset:0;z-index:500;">
 
     <!-- Centering wrapper (separate from x-show so Alpine doesn't clobber display:flex) -->
     <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:20px;">
 
     <!-- Backdrop -->
-    <div @click="open = false"
+    <div @click="close()"
          style="position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);"></div>
 
     <!-- Sheet -->
@@ -256,7 +317,7 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
          style="position:relative;background:white;border-radius:20px;padding:32px 28px;max-width:400px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.25);">
 
         <!-- Close -->
-        <button @click="open = false" type="button"
+        <button @click="close()" type="button"
                 style="position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:8px;background:var(--page-bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);transition:background .15s;"
                 @mouseover="$el.style.background='var(--border)'" @mouseleave="$el.style.background='var(--page-bg)'">
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 1.5l8 8M9.5 1.5l-8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -299,7 +360,7 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M5 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V8M7 1h4m0 0v4m0-4L5 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                 Ver tienda
             </a>
-            <button @click="open = false" type="button"
+            <button @click="close()" type="button"
                     class="btn-primary" style="flex:1;font-size:13px;">
                 Continuar
             </button>
@@ -307,4 +368,27 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
     </div><!-- /centering wrapper -->
 </div>
 {% endif %}
+
+<script>
+function inlineList(type) {
+    return {
+        items: [],
+        newName: '',
+        newExtra: '',
+        add() {
+            const name = this.newName.trim();
+            if (!name) return;
+            if (type === 'ingredient') {
+                this.items.push({ name, grams: this.newExtra ? parseInt(this.newExtra) : null });
+            } else {
+                const price = parseInt(this.newExtra);
+                if (isNaN(price) || price < 0) return;
+                this.items.push({ name, price });
+            }
+            this.newName = '';
+            this.newExtra = '';
+        }
+    };
+}
+</script>
 {% endblock %}
