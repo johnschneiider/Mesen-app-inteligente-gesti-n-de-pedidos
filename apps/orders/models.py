@@ -38,6 +38,11 @@ class Order(models.Model):
     menu = models.ForeignKey(
         'menus.DailyMenu', on_delete=models.PROTECT
     )
+    option = models.ForeignKey(
+        'menus.MenuOption', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='orders'
+    )
+    option_name = models.CharField(max_length=100, blank=True)
     order_number = models.CharField(max_length=8, unique=True, editable=False)
     quantity = models.IntegerField(default=1)
     unit_price = models.IntegerField()

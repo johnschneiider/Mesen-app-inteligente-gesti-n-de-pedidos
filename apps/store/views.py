@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.views import View
 
 from apps.accounts.models import Business, DeliveryAddress, User
-from apps.menus.models import DailyMenu, MenuRating
+from apps.menus.models import DailyMenu, MenuOption, MenuRating
 from apps.orders.models import Order
 from apps.orders.utils import notify_order_update
 from apps.store.models import BusinessReview
@@ -193,13 +193,27 @@ class CreateOrderView(View):
                 user.full_name = submitted_name
                 user.save(update_fields=['full_name'])
 
+            option = None
+            option_name = ''
+            unit_price = menu.price
+            option_id = request.POST.get('option_id', '').strip()
+            if option_id and option_id.isdigit():
+                try:
+                    option = MenuOption.objects.get(pk=int(option_id), menu=menu)
+                    unit_price = option.price
+                    option_name = option.name
+                except MenuOption.DoesNotExist:
+                    pass
+
             order = Order.objects.create(
                 business=business,
                 client=user,
                 menu=menu,
+                option=option,
+                option_name=option_name,
                 quantity=quantity,
-                unit_price=menu.price,
-                total_amount=quantity * menu.price,
+                unit_price=unit_price,
+                total_amount=quantity * unit_price,
                 payment_type=request.POST.get('payment_type', 'cash'),
                 order_type=request.POST.get('order_type', 'on_site'),
                 notes=request.POST.get('notes', ''),

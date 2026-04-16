@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.views import View
 from django.db.models import ProtectedError
 from apps.core.mixins import BusinessOwnerRequiredMixin
-from .models import DailyMenu, MenuIngredient, MenuPhoto
+from .models import DailyMenu, MenuIngredient, MenuPhoto, MenuOption
 from .forms import DailyMenuForm, MenuIngredientForm, MenuPhotoForm
 
 
@@ -117,3 +117,28 @@ class RemoveIngredientView(BusinessOwnerRequiredMixin, View):
         ingredient = get_object_or_404(MenuIngredient, pk=pk, menu__business=request.user.business)
         ingredient.delete()
         return HttpResponse('')
+
+
+class AddMenuOptionView(BusinessOwnerRequiredMixin, View):
+    template_name = 'menus/partials/options.html'
+
+    def post(self, request, pk):
+        menu = get_object_or_404(DailyMenu, pk=pk, business=request.user.business)
+        name = request.POST.get('name', '').strip()
+        price_raw = request.POST.get('price', '').strip()
+        if name and price_raw.isdigit():
+            MenuOption.objects.create(
+                menu=menu,
+                name=name,
+                price=int(price_raw),
+                order=menu.options.count(),
+            )
+        return render(request, self.template_name, {'menu': menu})
+
+
+class RemoveMenuOptionView(BusinessOwnerRequiredMixin, View):
+    def delete(self, request, pk):
+        option = get_object_or_404(MenuOption, pk=pk, menu__business=request.user.business)
+        menu = option.menu
+        option.delete()
+        return render(request, 'menus/partials/options.html', {'menu': menu})

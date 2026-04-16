@@ -18,14 +18,58 @@
     </div>
     {% endif %}
 
+    {% if menu.options.exists %}
+    {# precio dinámico controlado por Alpine — cambia al seleccionar opción #}
+    <div style="font-size:26px;font-weight:800;color:var(--green-dark);letter-spacing:-0.8px;margin-bottom:8px;"
+         x-text="selectedPrice ? formatCOP(selectedPrice) : '— elige una opción'"></div>
+    {% else %}
     <div style="font-size:26px;font-weight:800;color:var(--green-dark);letter-spacing:-0.8px;margin-bottom:20px;">{{ menu.price|currency_cop }}</div>
+    {% endif %}
 
     <form
         hx-post="{% url 'store:create_order' business_slug menu.pk %}"
         hx-target="#modal-content"
         hx-swap="innerHTML"
-        x-data="{ payMethod: 'cash', orderType: 'on_site' }">
+        x-data="{
+            payMethod: 'cash',
+            orderType: 'on_site',
+            selectedOptionId: {% if menu.options.exists %}null{% else %}0{% endif %},
+            selectedPrice: {% if menu.options.exists %}null{% else %}{{ menu.price }}{% endif %},
+            formatCOP(n) {
+                return '$ ' + n.toLocaleString('es-CO');
+            }
+        }">
         {% csrf_token %}
+
+        {# Campo hidden que se envía con el id de la opción seleccionada #}
+        <input type="hidden" name="option_id" :value="selectedOptionId || ''">
+
+        {% if menu.options.exists %}
+        <!-- ── OPCIONES DE PRECIO ── -->
+        <div style="margin-bottom:18px;">
+            <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Elige tu opción *</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                {% for opt in menu.options.all %}
+                <label
+                    @click="selectedOptionId={{ opt.pk }}; selectedPrice={{ opt.price }};"
+                    style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;cursor:pointer;border:1.5px solid;"
+                    :style="selectedOptionId==={{ opt.pk }} ? 'border-color:var(--green);background:var(--green-light);' : 'border-color:var(--border);background:white;'">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:16px;height:16px;border-radius:50%;border:2px solid;flex-shrink:0;display:flex;align-items:center;justify-content:center;"
+                             :style="selectedOptionId==={{ opt.pk }} ? 'border-color:var(--green);' : 'border-color:var(--border);'">
+                            <div style="width:8px;height:8px;border-radius:50%;background:var(--green);"
+                                 x-show="selectedOptionId==={{ opt.pk }}"></div>
+                        </div>
+                        <span style="font-size:14px;font-weight:500;color:var(--text-1);">{{ opt.name }}</span>
+                    </div>
+                    <span style="font-size:14px;font-weight:700;color:var(--green-dark);">{{ opt.price|currency_cop }}</span>
+                    <input type="radio" name="_option_radio" value="{{ opt.pk }}"
+                           style="position:absolute;opacity:0;pointer-events:none;">
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <!-- ── TUS DATOS ── -->
         <div style="background:var(--page-bg);border-radius:12px;padding:14px;margin-bottom:16px;border:0.5px solid var(--border);">
@@ -153,8 +197,14 @@
         </div>
 
         <button type="submit"
-                style="width:100%;padding:15px;background:var(--green);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;">
+                {% if menu.options.exists %}:disabled="!selectedOptionId"{% endif %}
+                style="width:100%;padding:15px;background:var(--green);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:-0.2px;transition:opacity 0.15s;"
+                {% if menu.options.exists %}:style="!selectedOptionId ? 'opacity:0.45;cursor:not-allowed;' : ''"{% endif %}>
+            {% if menu.options.exists %}
+            Confirmar pedido <span x-show="selectedPrice" x-text="'• ' + formatCOP(selectedPrice)"></span>
+            {% else %}
             Confirmar pedido • {{ menu.price|currency_cop }}
+            {% endif %}
         </button>
     </form>
 </div>

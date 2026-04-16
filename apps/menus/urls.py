@@ -11,4 +11,6 @@ urlpatterns = [
     path('<int:pk>/foto/', views.AddMenuPhotoView.as_view(), name='add_photo'),
     path('<int:pk>/ingrediente/', views.AddIngredientView.as_view(), name='add_ingredient'),
     path('ingrediente/<int:pk>/', views.RemoveIngredientView.as_view(), name='remove_ingredient'),
+    path('<int:pk>/opcion/', views.AddMenuOptionView.as_view(), name='add_option'),
+    path('opcion/<int:pk>/', views.RemoveMenuOptionView.as_view(), name='remove_option'),
 ]

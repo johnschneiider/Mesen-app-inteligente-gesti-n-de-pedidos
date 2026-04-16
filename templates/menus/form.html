@@ -116,6 +116,15 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
             <span style="font-size:12px;color:var(--text-3);">Guarda el menú primero para agregar ingredientes.</span>
         </div>
     </div>
+
+    <!-- Opciones placeholder (solo en creación) -->
+    <div class="card" style="margin-bottom:16px;">
+        <div class="section-header" style="margin-bottom:0;"><h2>Opciones de precio</h2></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:14px;background:var(--bg-alt);border-radius:var(--radius);border:1px solid var(--border);">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;color:var(--text-3);"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v4M8 10.5v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span style="font-size:12px;color:var(--text-3);">Guarda el menú primero para agregar opciones (ej: "Con sopa", "Solo bandeja").</span>
+        </div>
+    </div>
     {% endif %}
 
 </form>
@@ -169,6 +178,34 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
         <div class="form-group" style="width:80px;margin:0;">
             <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Gramos</label>
             <input type="number" name="grams" placeholder="g" min="1" style="width:100%;">
+        </div>
+        <button type="submit" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
+    </form>
+</div>
+
+<!-- ── OPCIONES DE PRECIO ── -->
+<div class="card" style="margin-bottom:16px;">
+    <div class="section-header" style="margin-bottom:4px;"><h2>Opciones de precio</h2></div>
+    <p style="font-size:12px;color:var(--text-3);margin:0 0 12px;">
+        Si el plato tiene versiones con distintos precios (ej: "Con sopa" / "Solo bandeja"), agrégalas aquí.
+        Cuando existan opciones, el cliente las verá como selección obligatoria al pedir.
+    </p>
+    <div id="options-list">
+        {% include 'menus/partials/options.html' with menu=menu %}
+    </div>
+    <form hx-post="{% url 'menus:add_option' menu.pk %}"
+          hx-target="#options-list"
+          hx-swap="innerHTML"
+          hx-on::after-request="this.reset()"
+          style="display:flex;gap:6px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;align-items:flex-end;">
+        {% csrf_token %}
+        <div class="form-group" style="flex:1;margin:0;">
+            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre de la opción</label>
+            <input type="text" name="name" placeholder="Ej: Con sopa" required style="width:100%;">
+        </div>
+        <div class="form-group" style="width:110px;margin:0;">
+            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Precio ($)</label>
+            <input type="number" name="price" placeholder="13000" min="0" required style="width:100%;">
         </div>
         <button type="submit" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
     </form>

@@ -1,0 +1,20 @@
+{% load mesenu_tags %}
+{% for option in menu.options.all %}
+<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--page-bg);border-radius:var(--radius-md);margin-bottom:5px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="2.5" fill="var(--green)"/></svg>
+        <span style="font-size:13px;color:var(--text-1);">{{ option.name }}</span>
+        <span style="font-size:11px;color:var(--green-dark);background:var(--green-light);border:0.5px solid var(--green-border);border-radius:99px;padding:1px 7px;">{{ option.price|currency_cop }}</span>
+    </div>
+    <button
+        hx-delete="{% url 'menus:remove_option' option.pk %}"
+        hx-target="#options-list"
+        hx-swap="innerHTML"
+        style="background:none;border:none;cursor:pointer;padding:2px;color:var(--text-3);"
+        title="Eliminar">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+</div>
+{% empty %}
+<div style="font-size:12px;color:var(--text-3);padding:12px 0;text-align:center;">Sin opciones todavía — el cliente verá el precio base del menú</div>
+{% endfor %}

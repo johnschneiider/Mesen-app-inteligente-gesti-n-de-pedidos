@@ -79,6 +79,22 @@ class MenuIngredient(models.Model):
         return self.name
 
 
+class MenuOption(models.Model):
+    """Variante de precio de un menú (ej: "Con sopa" $13000, "Solo bandeja" $10000)."""
+    menu = models.ForeignKey(DailyMenu, on_delete=models.CASCADE, related_name='options')
+    name = models.CharField(max_length=100)
+    price = models.IntegerField()
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = 'Opción de precio'
+        verbose_name_plural = 'Opciones de precio'
+
+    def __str__(self):
+        return f'{self.name} — ${self.price:,}'
+
+
 class MenuRating(models.Model):
     menu = models.ForeignKey(DailyMenu, on_delete=models.CASCADE, related_name='ratings')
     user = models.ForeignKey('accounts.User', on_delete=models.CASCADE)
