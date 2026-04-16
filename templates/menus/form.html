@@ -38,79 +38,81 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
     <div class="card" style="margin-bottom:16px;">
         <div class="section-header" style="margin-bottom:16px;"><h2>Información del menú</h2></div>
 
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom:14px;">
             <label class="form-label" for="{{ form.title.id_for_label }}">Nombre del plato *</label>
             {{ form.title }}
             {% if form.title.errors %}<div class="form-error">{{ form.title.errors.0 }}</div>{% endif %}
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom:14px;">
             <label class="form-label" for="{{ form.description.id_for_label }}">Descripción</label>
             {{ form.description }}
             {% if form.description.errors %}<div class="form-error">{{ form.description.errors.0 }}</div>{% endif %}
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div class="form-group">
-                <label class="form-label" for="{{ form.price.id_for_label }}">Precio *</label>
-                {{ form.price }}
-                {% if form.price.errors %}<div class="form-error">{{ form.price.errors.0 }}</div>{% endif %}
+        <!-- Precio + variantes — sección unificada -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius);background:var(--page-bg);padding:14px;margin-bottom:14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0;">
+                <div>
+                    <label class="form-label" for="{{ form.price.id_for_label }}">Precio *</label>
+                    {{ form.price }}
+                    {% if form.price.errors %}<div class="form-error">{{ form.price.errors.0 }}</div>{% endif %}
+                </div>
+                <div>
+                    <label class="form-label" for="{{ form.max_units.id_for_label }}">Unidades disponibles</label>
+                    {{ form.max_units }}
+                    <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Deja en 50 o ajusta según disponibilidad</div>
+                </div>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="{{ form.max_units.id_for_label }}">Unidades disponibles</label>
-                {{ form.max_units }}
-                <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Deja en 50 o ajusta según disponibilidad</div>
-            </div>
-        </div>
 
-        <!-- Opciones de precio (inline en creación) -->
-        {% if not form.instance.pk %}
-        <div x-data="inlineList('option')" style="margin-top:4px;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-                <span style="font-size:13px;font-weight:600;color:var(--text-1);">Variantes de precio</span>
-                <span style="font-size:11px;color:var(--text-3);">(opcional)</span>
-            </div>
-            <div id="create-options-list">
-                <template x-for="(item, idx) in items" :key="idx">
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--page-bg);border-radius:var(--radius-md);margin-bottom:5px;">
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="2.5" fill="var(--green)"/></svg>
-                            <span style="font-size:13px;color:var(--text-1);" x-text="item.name"></span>
-                            <span style="font-size:11px;color:var(--green-dark);background:var(--green-light);border:0.5px solid var(--green-border);border-radius:99px;padding:1px 7px;" x-text="'$' + Number(item.price).toLocaleString('es-CO')"></span>
-                            <input type="hidden" :name="'option_name_' + idx" :value="item.name">
-                            <input type="hidden" :name="'option_price_' + idx" :value="item.price">
+            <!-- Variantes (inline en creación) -->
+            {% if not form.instance.pk %}
+            <div x-data="inlineList('option')" style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+                <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+                    Variantes de precio <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span>
+                </div>
+                <div id="create-options-list">
+                    <template x-for="(item, idx) in items" :key="idx">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:white;border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:5px;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="2.5" fill="var(--green)"/></svg>
+                                <span style="font-size:13px;color:var(--text-1);" x-text="item.name"></span>
+                                <span style="font-size:11px;color:var(--green-dark);background:var(--green-light);border:0.5px solid var(--green-border);border-radius:99px;padding:1px 7px;" x-text="'$' + Number(item.price).toLocaleString('es-CO')"></span>
+                                <input type="hidden" :name="'option_name_' + idx" :value="item.name">
+                                <input type="hidden" :name="'option_price_' + idx" :value="item.price">
+                            </div>
+                            <button type="button" @click="items.splice(idx, 1)"
+                                style="background:none;border:none;cursor:pointer;padding:2px;color:var(--text-3);">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                            </button>
                         </div>
-                        <button type="button" @click="items.splice(idx, 1)"
-                            style="background:none;border:none;cursor:pointer;padding:2px;color:var(--text-3);">
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                        </button>
+                    </template>
+                    <div x-show="items.length === 0" style="font-size:12px;color:var(--text-3);padding:6px 0;">Sin variantes</div>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:8px;align-items:flex-end;">
+                    <div style="flex:1;">
+                        <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre</label>
+                        <input type="text" x-model="newName" placeholder="Ej: Con sopa" @keydown.enter.prevent="add()" style="width:100%;">
                     </div>
-                </template>
-                <div x-show="items.length === 0" style="font-size:12px;color:var(--text-3);padding:8px 0;text-align:center;">Sin variantes</div>
-            </div>
-            <div style="display:flex;gap:6px;margin-top:8px;border-top:1px solid var(--border);padding-top:10px;align-items:flex-end;">
-                <div class="form-group" style="flex:1;margin:0;">
-                    <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre de la opción</label>
-                    <input type="text" x-model="newName" placeholder="Ej: Con sopa" @keydown.enter.prevent="add()" style="width:100%;">
+                    <div style="width:110px;">
+                        <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Precio ($)</label>
+                        <input type="number" x-model="newExtra" placeholder="13000" min="0" @keydown.enter.prevent="add()" style="width:100%;">
+                    </div>
+                    <button type="button" @click="add()" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
                 </div>
-                <div class="form-group" style="width:110px;margin:0;">
-                    <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Precio ($)</label>
-                    <input type="number" x-model="newExtra" placeholder="13000" min="0" @keydown.enter.prevent="add()" style="width:100%;">
-                </div>
-                <button type="button" @click="add()" class="btn-primary" style="padding:8px 12px;white-space:nowrap;">+ Agregar</button>
+                <input type="hidden" name="option_count" :value="items.length">
             </div>
-            <input type="hidden" name="option_count" :value="items.length">
+            {% endif %}
         </div>
-        {% endif %}
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-            <div class="form-group">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
                 <label class="form-label" for="{{ form.valid_from.id_for_label }}">Disponible desde *</label>
                 {{ form.valid_from }}
                 {% if form.valid_from.errors %}<div class="form-error">{{ form.valid_from.errors.0 }}</div>{% endif %}
                 <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Para que sea visible ahora, deja la hora actual.</div>
             </div>
-            <div class="form-group">
+            <div>
                 <label class="form-label" for="{{ form.valid_until.id_for_label }}">Hasta (opcional)</label>
                 {{ form.valid_until }}
                 <div style="font-size:11px;color:var(--text-3);margin-top:3px;">Si no se indica, el menú no expira automáticamente.</div>
@@ -118,7 +120,7 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
         </div>
 
         <!-- Toggle activo -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-alt);border-radius:var(--radius);border:1px solid var(--border);margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-alt);border-radius:var(--radius);border:1px solid var(--border);">
             <div>
                 <div style="font-size:13px;font-weight:600;color:var(--text-1);">Menú activo</div>
                 <div style="font-size:11px;color:var(--text-3);margin-top:2px;">Cuando está activo, es visible en tu tienda pública</div>
@@ -193,9 +195,8 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
 
 <!-- Opciones de precio (HTMX — justo debajo del card de info) -->
 <div class="card" style="margin-bottom:16px;">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-        <span style="font-size:13px;font-weight:600;color:var(--text-1);">Variantes de precio</span>
-        <span style="font-size:11px;color:var(--text-3);">(opcional)</span>
+    <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
+        Variantes de precio <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span>
     </div>
     <div id="options-list">
         {% include 'menus/partials/options.html' with menu=menu %}
@@ -204,13 +205,13 @@ input:checked + .toggle-slider::before { transform:translateX(22px); }
           hx-target="#options-list"
           hx-swap="innerHTML"
           hx-on::after-request="this.reset()"
-          style="display:flex;gap:6px;margin-top:8px;border-top:1px solid var(--border);padding-top:10px;align-items:flex-end;">
+          style="display:flex;gap:6px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;align-items:flex-end;">
         {% csrf_token %}
-        <div class="form-group" style="flex:1;margin:0;">
-            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre de la opción</label>
+        <div style="flex:1;">
+            <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Nombre</label>
             <input type="text" name="name" placeholder="Ej: Con sopa" required style="width:100%;">
         </div>
-        <div class="form-group" style="width:110px;margin:0;">
+        <div style="width:110px;">
             <label style="font-size:11px;color:var(--text-3);margin-bottom:3px;display:block;">Precio ($)</label>
             <input type="number" name="price" placeholder="13000" min="0" required style="width:100%;">
         </div>
